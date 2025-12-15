@@ -50,6 +50,8 @@ typedef struct physics_data
 void physics_data_init(physics_data_t* data);
 
 status_t physics_init(physics_t* physics, cecs_t* ecs);
+
 void physics_tick(physics_t* physics, scene_t* scene, float dt);
+
 
 #endif

@@ -8,7 +8,7 @@
 // TODO: Refactor this script to really make sense, e.g. we can pass in a camera offset.
 uint8_t third_person = 1;
 
-inline void player_controller(engine_t* engine, cecs_entity_id_t eid, float dt)
+inline void player_controller_physics(engine_t* engine, cecs_entity_id_t eid, float dt)
 {
     if (engine->input_mode != INPUT_MODE_GAME) return;
 
@@ -60,7 +60,18 @@ inline void player_controller(engine_t* engine, cecs_entity_id_t eid, float dt)
         // TODO: Only if colliding with something???
         const float jump_height = pd->mass;
         v3_add_eq_v3(&pd->impulses, v3_mul_f(up, jump_height));   
-    }
+    }    
+}
+
+inline void player_controller_camera(engine_t* engine, cecs_entity_id_t eid)
+{
+    if (engine->input_mode != INPUT_MODE_GAME) return;
+
+    transform_t* t = cecs_get_component(engine->ecs, eid, COMPONENT_TRANSFORM);
+
+    const static v3_t up = { 0, 1.f, 0 };
+    const v3_t forward = v3_normalised((v3_t) { engine->renderer.camera.direction.x, 0.f, engine->renderer.camera.direction.z });
+    const v3_t right = v3_normalised(cross(forward, up));
 
     v3_t player_pos = v3_lerp(t->previous_position, t->position, engine->renderer.frame_data.physics_alpha);
     if (third_person)
@@ -78,7 +89,8 @@ inline void player_controller(engine_t* engine, cecs_entity_id_t eid, float dt)
     {
         engine->renderer.camera.position = player_pos;
     }
-    
 }
+
+
 
 #endif
