@@ -71,7 +71,8 @@ void engine_destroy(engine_t* engine);
 // Public engine events that the game should define.
 void engine_on_init(engine_t* engine);
 
-void engine_on_update(engine_t* engine, float dt);
+void engine_before_physics(engine_t* engine, float dt);
+void engine_after_physics(engine_t* engine, float physics_alpha);
 
 void engine_on_keyup(engine_t* engine, WPARAM wParam);
 

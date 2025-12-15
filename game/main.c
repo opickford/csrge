@@ -212,7 +212,7 @@ void engine_on_init(engine_t* engine)
     create_map(engine);
 }
 
-void engine_on_update(engine_t* engine, float dt)
+void engine_before_physics(engine_t* engine, float dt)
 {
     {
         physics_data_t* pd = cecs_get_component(engine->ecs, map_entity, COMPONENT_PHYSICS_DATA);
@@ -229,8 +229,13 @@ void engine_on_update(engine_t* engine, float dt)
 
     }
 
-    player_controller(engine, player_entity, dt);
+    player_controller_physics(engine, player_entity, dt);
     update_billboard(engine, billboard_entity, dt);
+}
+
+void engine_after_physics(engine_t* engine, float physics_alpha)
+{
+    player_controller_camera(engine, player_entity);
 }
 
 void engine_on_keyup(engine_t* engine, WPARAM wParam)

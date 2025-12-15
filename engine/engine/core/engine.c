@@ -173,37 +173,62 @@ void engine_run(engine_t* engine)
 
         snprintf(process_messages_str, sizeof(process_messages_str), "ProcMsgs: %d", timer_get_elapsed(&t));
 
+        // Calculate performance.
+        QueryPerformanceCounter(&endTime);
+        dt = (float)(endTime.QuadPart - startTime.QuadPart) / frequency.QuadPart;
+
+        dt_counter += dt;
+        physics_dt_counter += dt * g_physics_time_scale;
+
+        startTime = endTime;
+
+        fps = (int)(1.0f / dt);
+
+        if (dt_counter > 2)
+        {
+            snprintf(fps_str, sizeof(fps_str), "FPS: %d", fps);
+            dt_counter = 0;
+        }
+
+        // TODO: TEMP?
+        g_elapsed += dt;
+
         // Handle any keyboard/mouse input.
         timer_restart(&t);
         engine_handle_input(engine, dt);
         snprintf(handle_input_str, sizeof(handle_input_str), "HandleInput: %d", timer_get_elapsed(&t));
 
-        // Fire the engine update event.
+        // Fire the pre-physics event, e.g. update entity physics data, so the changes are processed
+        // this frame.
         timer_restart(&t);
-        engine_on_update(engine, dt);
-        snprintf(update_str, sizeof(update_str), "UpdateEvent: %d", timer_get_elapsed(&t));
+        engine_before_physics(engine, dt);
+        snprintf(update_str, sizeof(update_str), "EngineBeforePhysics: %d", timer_get_elapsed(&t));
        
-        m4_t view_matrix;
-        calculate_view_matrix(&engine->renderer.camera, view_matrix);
+        // Apply physics at a fixed rate.
+        timer_restart(&t);
 
-        // Apply physics
         while (physics_dt_counter >= physics_dt)
         {
-            timer_restart(&t);
-            physics_tick(&engine->physics, &engine->scene, physics_dt);
-            snprintf(physics_str, sizeof(physics_str), "Physics: %d", timer_get_elapsed(&t));
-            
+            // Move the physics world forward by a fixed step.
+            physics_tick(&engine->physics, &engine->scene, physics_dt);  
             physics_dt_counter -= physics_dt;
         }
 
-        // Essentially calculate how far are we through the physics frame. Allows us to
-        // smooth motion.
+        snprintf(physics_str, sizeof(physics_str), "Physics: %d", timer_get_elapsed(&t));
+
+        // Calculate how far we are through 
         engine->renderer.frame_data.physics_alpha = physics_dt_counter / physics_dt;
+
+        // Call after physics, e.g. update camera smoothly using physics alpha.
+        engine_after_physics(engine, engine->renderer.frame_data.physics_alpha);
         
         // Clear the canvas.
         timer_restart(&t);
         render_target_clear(&engine->renderer.target, engine->scene.bg_colour);
         snprintf(rt_clear_str, sizeof(rt_clear_str), "RTClear: %d", timer_get_elapsed(&t));
+
+        m4_t view_matrix;
+        calculate_view_matrix(&engine->renderer.camera, view_matrix);
 
         // Render scene.
         timer_restart(&t);
@@ -257,23 +282,6 @@ void engine_run(engine_t* engine)
         window_display(&engine->window);
         snprintf(display_str, sizeof(display_str), "Display: %d", timer_get_elapsed(&t));
 
-        // Calculate performance.
-        QueryPerformanceCounter(&endTime);
-        dt = (float)(endTime.QuadPart - startTime.QuadPart) / frequency.QuadPart;
-
-        dt_counter += dt;
-        physics_dt_counter += dt * g_physics_time_scale;
-
-        startTime = endTime;
-
-        fps = (int)(1.0f / dt);
-        
-        if (dt_counter > 2)
-        {
-            snprintf(fps_str, sizeof(fps_str), "FPS: %d", fps);
-            dt_counter = 0;
-        }
-
         snprintf(dir_str, sizeof(dir_str), "DIR: %.2f %.2f %.2f", engine->renderer.camera.direction.x, engine->renderer.camera.direction.y, engine->renderer.camera.direction.z);
         snprintf(pos_str, sizeof(pos_str), "POS: %.2f %.2f %.2f", engine->renderer.camera.position.x, engine->renderer.camera.position.y, engine->renderer.camera.position.z);
         
@@ -323,13 +331,6 @@ void engine_run(engine_t* engine)
             }
             snprintf(input_mode_str, sizeof(input_mode_str), "INPUT MODE: %s", mode);
         }
-        
-
-        
-
-
-        // TODO: TEMP?
-        g_elapsed += dt;        
     }
 }
 
