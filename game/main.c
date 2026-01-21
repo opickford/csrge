@@ -21,10 +21,10 @@ mesh_base_id_t monkey_base;
 mesh_base_id_t bowl_base;
 mesh_base_id_t terrain_base;
 
-cecs_entity_id_t map_entity;
-cecs_entity_id_t monkey_entity;
-cecs_entity_id_t player_entity;
-cecs_entity_id_t billboard_entity;
+cecs_entity_id map_entity;
+cecs_entity_id monkey_entity;
+cecs_entity_id player_entity;
+cecs_entity_id billboard_entity;
 
 void create_map(engine_t* engine)
 {
@@ -60,7 +60,7 @@ void create_map(engine_t* engine)
 
     // Create terrain
     {
-        cecs_entity_id_t cube_entity = cecs_create_entity(engine->ecs);
+        cecs_entity_id cube_entity = cecs_create_entity(engine->ecs);
         map_entity = cube_entity;
 
         // Add a mesh_instance_t component.
@@ -154,7 +154,7 @@ void create_map(engine_t* engine)
     // MONKEY
     /*
     {
-        cecs_entity_id_t cube_entity = cecs_create_entity(engine->ecs);
+        cecs_entity_id cube_entity = cecs_create_entity(engine->ecs);
         monkey_entity = cube_entity;
 
         // Add a mesh_instance_t component.
@@ -262,7 +262,7 @@ void engine_on_keyup(engine_t* engine, WPARAM wParam)
 
         const v3_t pos = v3_add_v3(camera->position, v3_mul_f(camera->direction, 10.f * (random_float() + 1)));
 
-        cecs_entity_id_t cube_entity = cecs_create_entity(engine->ecs);
+        cecs_entity_id cube_entity = cecs_create_entity(engine->ecs);
         mesh_instance_t* mi = cecs_add_component(engine->ecs, cube_entity, COMPONENT_MESH_INSTANCE);
         mesh_instance_init(mi, &scene->mesh_bases.bases[sphere_base]);
         mesh_instance_set_albedo(mi, &scene->mesh_bases.bases[sphere_base], colour);
@@ -295,7 +295,7 @@ void engine_on_keyup(engine_t* engine, WPARAM wParam)
         
         const v3_t pos = v3_add_v3(camera->position, v3_mul_f(camera->direction, 10.f * (random_float() + 1)));
 
-        cecs_entity_id_t e = cecs_create_entity(engine->ecs);
+        cecs_entity_id e = cecs_create_entity(engine->ecs);
         point_light_t* pl = cecs_add_component(engine->ecs, e, COMPONENT_POINT_LIGHT);
         pl->position = pos;
         pl->colour = colour;
@@ -325,7 +325,7 @@ void engine_on_keyup(engine_t* engine, WPARAM wParam)
     }
     case VK_F7:
     {
-        cecs_entity_id_t cube_entity = cecs_create_entity(engine->ecs);
+        cecs_entity_id cube_entity = cecs_create_entity(engine->ecs);
         map_entity = cube_entity;
 
         // Add a mesh_instance_t component.
@@ -354,7 +354,7 @@ void engine_on_keyup(engine_t* engine, WPARAM wParam)
     {
         for (int i = 0; i < 10; ++i)
         {
-            cecs_entity_id_t cube_entity = cecs_create_entity(engine->ecs);
+            cecs_entity_id cube_entity = cecs_create_entity(engine->ecs);
             map_entity = cube_entity;
 
             // Add a mesh_instance_t component.
@@ -404,7 +404,7 @@ void engine_on_lmbdown(engine_t* engine)
     scene_t* scene = &engine->scene;
 
     // Create an entity
-    cecs_entity_id_t cube_entity = cecs_create_entity(engine->ecs);
+    cecs_entity_id cube_entity = cecs_create_entity(engine->ecs);
 
     //mesh_base_t* mb = &scene->mesh_bases.bases[cube_base];
     mesh_base_t* mb = &scene->mesh_bases.bases[sphere_base];

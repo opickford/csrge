@@ -23,10 +23,10 @@ status_t mesh_instance_set_base(mesh_instance_t* mi, const mesh_base_t* mb)
 {
 	// Grow the vertex albedos buffer, there should be one albedo
 	// per vertex.
-    chds_vec_resize(mi->vertex_alebdos, mb->num_faces * STRIDE_FACE_VERTICES);
+    CHDS_VEC_RESIZE(mi->vertex_alebdos, mb->num_faces * STRIDE_FACE_VERTICES);
 
     // TODO: Nicer way to check if vector resize succeeded?
-    if (chds_vec_capacity(mi->vertex_alebdos) != mb->num_faces * STRIDE_FACE_VERTICES)
+    if (CHDS_VEC_CAPACITY(mi->vertex_alebdos) != mb->num_faces * STRIDE_FACE_VERTICES)
     {
         return STATUS_ALLOC_FAILURE;
     }

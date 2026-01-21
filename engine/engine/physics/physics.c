@@ -16,12 +16,12 @@
 
 static void physics_setup_views(physics_t* physics)
 {
-    physics->physics_view = cecs_view(physics->ecs,
+    physics->physics_view = cecs_view_create(physics->ecs,
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_PHYSICS_DATA) | 
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_TRANSFORM),
         0);
 
-    physics->colliders_view = cecs_view(physics->ecs,
+    physics->colliders_view = cecs_view_create(physics->ecs,
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_TRANSFORM) | 
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_MESH_INSTANCE) | 
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_COLLIDER),
@@ -30,7 +30,7 @@ static void physics_setup_views(physics_t* physics)
     // TODO: Currently these views a mesh_instance_t is this correct?
 
     // Note, may not actually be moving, just has physicsdata so COULD be moving.
-    physics->moving_colliders_view = cecs_view(physics->ecs,
+    physics->moving_colliders_view = cecs_view_create(physics->ecs,
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_PHYSICS_DATA) | 
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_TRANSFORM) |
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_MESH_INSTANCE) | 
@@ -38,14 +38,14 @@ static void physics_setup_views(physics_t* physics)
         0);
 
     // Static means no physics data.
-    physics->static_colliders_view = cecs_view(physics->ecs,
+    physics->static_colliders_view = cecs_view_create(physics->ecs,
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_TRANSFORM) | 
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_MESH_INSTANCE) | 
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_COLLIDER),
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_PHYSICS_DATA));
 }
 
-status_t physics_init(physics_t* physics, cecs_t* ecs)
+status_t physics_init(physics_t* physics, cecs* ecs)
 {
     memset(physics, 0, sizeof(physics_t));
     physics->ecs = ecs;
@@ -71,7 +71,7 @@ static void apply_forces(physics_t* physics, float dt)
     // TODO: Define in physics world.
     static const v3_t gravity = { 0, -9.8f, 0 };
     
-    cecs_view_iter_t it = cecs_view_iter(physics->ecs, physics->physics_view);
+    cecs_view_iter it = cecs_view_iter_create(physics->ecs, physics->physics_view);
 
     while (cecs_view_iter_next(&it))
     {
@@ -155,7 +155,7 @@ static void apply_forces(physics_t* physics, float dt)
 
 static void apply_velocities(physics_t* physics, float dt)
 {
-    cecs_view_iter_t it = cecs_view_iter(physics->ecs, physics->physics_view);
+    cecs_view_iter it = cecs_view_iter_create(physics->ecs, physics->physics_view);
     while (cecs_view_iter_next(&it))
     {
         physics_data_t* physics_datas = cecs_get_column(it, COMPONENT_PHYSICS_DATA);
@@ -184,8 +184,8 @@ void physics_tick(physics_t* physics, scene_t* scene, float dt)
 {
     // TODO: TEMP: 
     {
-        cecs_view_id_t v = cecs_view(physics->ecs, CECS_COMPONENT_ID_TO_BITSET(COMPONENT_TRANSFORM), 0);
-        cecs_view_iter_t it = cecs_view_iter(physics->ecs, v);
+        cecs_view_id v = cecs_view_create(physics->ecs, CECS_COMPONENT_ID_TO_BITSET(COMPONENT_TRANSFORM), 0);
+        cecs_view_iter it = cecs_view_iter_create(physics->ecs, v);
         while (cecs_view_iter_next(&it))
         {
             transform_t* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
