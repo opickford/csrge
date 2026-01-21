@@ -7,19 +7,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-status_t mesh_instance_init(mesh_instance_t* mi, const mesh_base_t* mb)
+Status mesh_instance_init(MeshInstance* mi, const MeshBase* mb)
 {
-	memset(mi, 0, sizeof(mesh_instance_t));
+	memset(mi, 0, sizeof(MeshInstance));
 
 	mi->has_scale_changed = 1; // TODO: Rename to recalc bounding sphere?
     mi->texture_id = -1; // Default to untextured.
 
-    status_t status = mesh_instance_set_base(mi, mb);
+    Status status = mesh_instance_set_base(mi, mb);
 
 	return status;
 }
 
-status_t mesh_instance_set_base(mesh_instance_t* mi, const mesh_base_t* mb)
+Status mesh_instance_set_base(MeshInstance* mi, const MeshBase* mb)
 {
 	// Grow the vertex albedos buffer, there should be one albedo
 	// per vertex.
@@ -34,12 +34,12 @@ status_t mesh_instance_set_base(mesh_instance_t* mi, const mesh_base_t* mb)
 	mi->mb_id = mb->id;
 
 	// Default albedo to white.
-	mesh_instance_set_albedo(mi, mb, (v3_t) { 1.f, 1.f, 1.f });
+	mesh_instance_set_albedo(mi, mb, (V3) { 1.f, 1.f, 1.f });
 	
 	return STATUS_OK;
 }
 
-void mesh_instance_set_albedo(mesh_instance_t* mi, const mesh_base_t* mb, v3_t albedo)
+void mesh_instance_set_albedo(MeshInstance* mi, const MeshBase* mb, V3 albedo)
 {
 	for (int i = 0; i < mb->num_faces * STRIDE_FACE_VERTICES; ++i)
 	{
@@ -49,7 +49,7 @@ void mesh_instance_set_albedo(mesh_instance_t* mi, const mesh_base_t* mb, v3_t a
 	}
 }
 
-void mesh_instance_destroy(mesh_instance_t* mi)
+void mesh_instance_destroy(MeshInstance* mi)
 {
     if (!mi) return;
 

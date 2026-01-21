@@ -12,10 +12,10 @@
 
 #include <string.h>
 
-typedef struct collider collider_t;
-typedef struct physics_data physics_data_t;
-typedef struct mesh_instance mesh_instance_t;
-typedef struct transform transform_t;
+typedef struct collider Collider;
+typedef struct physics_data PhysicsData;
+typedef struct mesh_instance MeshInstance;
+typedef struct transform Transform;
 
 // TODO: Should this just store the necessary for each entity, i think so? Would make it easier to unpack right and less computations....
 // TODO: An issue with pointers would be if a collision called a 
@@ -27,21 +27,21 @@ typedef struct transform transform_t;
 // TODO: Should this be elsewhere?
 typedef struct
 {
-    const mesh_instance_t* mi0;
-    collider_t* c0;
-    physics_data_t* pd0;
-    transform_t* t0;
+    const MeshInstance* mi0;
+    Collider* c0;
+    PhysicsData* pd0;
+    Transform* t0;
 
-    const mesh_instance_t* mi1;
-    collider_t* c1;
-    physics_data_t* pd1;
-    transform_t* t1;
+    const MeshInstance* mi1;
+    Collider* c1;
+    PhysicsData* pd1;
+    Transform* t1;
     
 
 
 
     /*
-    // collider_t collides with a target.
+    // Collider collides with a target.
     cecs_archetype_id collider_aid;
     int collider_offset;
 
@@ -49,33 +49,33 @@ typedef struct
     int target_offset;
     */
 
-} potential_collision_t;
+} PotentialCollision;
 
 typedef struct
 {
-    v3_t collision_normal;
+    V3 collision_normal;
 
     uint8_t hit;
 
     float penetration_depth;
 
-    potential_collision_t pc; // TODO: TEMP: Just for the entity ptrs?
+    PotentialCollision pc; // TODO: TEMP: Just for the entity ptrs?
 
-} collision_data_t;
+} CollisionData;
 
 typedef struct
 {
-    CHDS_VEC(potential_collision_t) potential_collisions;
-    CHDS_VEC(collision_data_t) collisions;
+    CHDS_VEC(PotentialCollision) potential_collisions;
+    CHDS_VEC(CollisionData) collisions;
 
-} physics_frame_t;
+} PhysicsFrame;
 
-inline void physics_frame_init(physics_frame_t* pf)
+inline void physics_frame_init(PhysicsFrame* pf)
 {
-    memset(pf, 0, sizeof(physics_frame_t));
+    memset(pf, 0, sizeof(PhysicsFrame));
 }
 
-inline void physics_frame_destroy(physics_frame_t* pf)
+inline void physics_frame_destroy(PhysicsFrame* pf)
 {
     chds_vec_destroy(pf->potential_collisions);
     chds_vec_destroy(pf->collisions);

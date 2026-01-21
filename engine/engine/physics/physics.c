@@ -14,7 +14,7 @@
 
 // TODO: Reorganise functions here.
 
-static void physics_setup_views(physics_t* physics)
+static void physics_setup_views(Physics* physics)
 {
     physics->physics_view = cecs_view_create(physics->ecs,
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_PHYSICS_DATA) | 
@@ -27,7 +27,7 @@ static void physics_setup_views(physics_t* physics)
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_COLLIDER),
         0);
 
-    // TODO: Currently these views a mesh_instance_t is this correct?
+    // TODO: Currently these views a MeshInstance is this correct?
 
     // Note, may not actually be moving, just has physicsdata so COULD be moving.
     physics->moving_colliders_view = cecs_view_create(physics->ecs,
@@ -45,9 +45,9 @@ static void physics_setup_views(physics_t* physics)
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_PHYSICS_DATA));
 }
 
-status_t physics_init(physics_t* physics, cecs* ecs)
+Status physics_init(Physics* physics, cecs* ecs)
 {
-    memset(physics, 0, sizeof(physics_t));
+    memset(physics, 0, sizeof(Physics));
     physics->ecs = ecs;
 
     physics->max_collision_iters = 3;
@@ -59,7 +59,7 @@ status_t physics_init(physics_t* physics, cecs* ecs)
     return STATUS_OK;
 }
 
-static void apply_forces(physics_t* physics, float dt)
+static void apply_forces(Physics* physics, float dt)
 {
     static float elapsed = 0.0f;
 
@@ -69,18 +69,18 @@ static void apply_forces(physics_t* physics, float dt)
 
     // Disable gravity for now.
     // TODO: Define in physics world.
-    static const v3_t gravity = { 0, -9.8f, 0 };
+    static const V3 gravity = { 0, -9.8f, 0 };
     
     cecs_view_iter it = cecs_view_iter_create(physics->ecs, physics->physics_view);
 
     while (cecs_view_iter_next(&it))
     {
-        physics_data_t* physics_datas = cecs_get_column(it, COMPONENT_PHYSICS_DATA);
-        transform_t* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
+        PhysicsData* physics_datas = cecs_get_column(it, COMPONENT_PHYSICS_DATA);
+        Transform* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
 
         for (uint32_t i = 0; i < it.num_entities; ++i)
         {
-            physics_data_t* physics_data = &physics_datas[i];
+            PhysicsData* physics_data = &physics_datas[i];
 
             if (physics_data->mass == 0.f) continue;
 
@@ -89,10 +89,10 @@ static void apply_forces(physics_t* physics, float dt)
             // TODO: Instead of this maybe we could do have a floating flag.
             
 
-            transform_t* transform = &transforms[i];
+            Transform* transform = &transforms[i];
 
             // Sum continuous acceleration.
-            v3_t total_acceleration = { 0 };
+            V3 total_acceleration = { 0 };
 
             if (!physics_data->floating)
             {
@@ -109,8 +109,8 @@ static void apply_forces(physics_t* physics, float dt)
 
             // TODO: essentially i need to figure out what will work best for them game. maybe just remove this for now
             //       honestly. i don't know whether we should use a physically force based drag formula that will take in mass,
-            //       and other parameters (requires more tuning per mi but might feel better), or just a dampening factor on the 
-            //       velocity which would require configuring the damping factor, but that's it.
+            //       and other parameters (reqUIres more tuning per mi but might feel better), or just a dampening factor on the 
+            //       velocity which would reqUIre configuring the damping factor, but that's it.
 
             // Air resistance/drag, simple mass sensitive 
             if (speed > 0.f)
@@ -124,13 +124,13 @@ static void apply_forces(physics_t* physics, float dt)
                 */
 
                 float drag_k = 0.35f; // TODO: Parameter would need to be tuned. e.g. for a 1kg, 0.01m sphere, 0.35 is way too high.
-                //       probs just in physics_data_t? or we could just dampen velocity, but then everytihng would
+                //       probs just in PhysicsData? or we could just dampen velocity, but then everytihng would
                 //       drop at the same speed.
 
                 float drag_mag = drag_k * speed * speed / physics_data->mass;
 
                 // drag_accel = v3_normalised(v) * -drag_mag
-                v3_t drag_accel = v3_mul_f(v3_mul_f(physics_data->velocity, 1.f / speed), -drag_mag);
+                V3 drag_accel = v3_mul_f(v3_mul_f(physics_data->velocity, 1.f / speed), -drag_mag);
 
                 v3_add_eq_v3(&total_acceleration, drag_accel);
 
@@ -148,23 +148,23 @@ static void apply_forces(physics_t* physics, float dt)
             elapsed += dt;
 
             // Clear impulses/instantaneous forces.
-            physics_data->impulses = (v3_t){ 0.f, 0.f, 0.f };
+            physics_data->impulses = (V3){ 0.f, 0.f, 0.f };
         }
     }
 }
 
-static void apply_velocities(physics_t* physics, float dt)
+static void apply_velocities(Physics* physics, float dt)
 {
     cecs_view_iter it = cecs_view_iter_create(physics->ecs, physics->physics_view);
     while (cecs_view_iter_next(&it))
     {
-        physics_data_t* physics_datas = cecs_get_column(it, COMPONENT_PHYSICS_DATA);
-        transform_t* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
+        PhysicsData* physics_datas = cecs_get_column(it, COMPONENT_PHYSICS_DATA);
+        Transform* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
 
         for (uint32_t i = 0; i < it.num_entities; ++i)
         {
-            physics_data_t* physics_data = &physics_datas[i];
-            transform_t* transform = &transforms[i];
+            PhysicsData* physics_data = &physics_datas[i];
+            Transform* transform = &transforms[i];
 
             // Update position with new velocity.
             v3_add_eq_v3(&transform->position, v3_mul_f(physics_data->velocity, dt));
@@ -172,15 +172,15 @@ static void apply_velocities(physics_t* physics, float dt)
     }
 }
 
-void physics_data_init(physics_data_t* data)
+void physics_data_init(PhysicsData* data)
 {
-    memset(data, 0, sizeof(physics_data_t));
+    memset(data, 0, sizeof(PhysicsData));
 
     // Mass of 0 means the object cannot be pushed.
     data->mass = 1.f; 
 }
 
-void physics_tick(physics_t* physics, scene_t* scene, float dt)
+void physics_tick(Physics* physics, Scene* scene, float dt)
 {
     // TODO: TEMP: 
     {
@@ -188,11 +188,11 @@ void physics_tick(physics_t* physics, scene_t* scene, float dt)
         cecs_view_iter it = cecs_view_iter_create(physics->ecs, v);
         while (cecs_view_iter_next(&it))
         {
-            transform_t* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
+            Transform* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
 
             for (uint32_t i = 0; i < it.num_entities; ++i)
             {
-                transform_t* transform = &transforms[i];
+                Transform* transform = &transforms[i];
 
                 transform->previous_position = transform->position;
                 transform->previous_rotation = transform->rotation;

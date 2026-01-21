@@ -5,15 +5,15 @@
 
 typedef struct
 {
-	v3_t normal;
-	v3_t point;
-} plane_t;
+	V3 normal;
+	V3 point;
+} Plane;
 
 
-float signed_distance(const plane_t* plane, const v3_t point);
+float signed_distance(const Plane* plane, const V3 point);
 
-float line_intersect_plane(const v3_t v0, const v3_t v1, const plane_t* plane, v3_t* out);
+float line_intersect_plane(const V3 v0, const V3 v1, const Plane* plane, V3* out);
 
-plane_t plane_from_points(const v3_t v0, const v3_t v1, const v3_t v2);
+Plane plane_from_points(const V3 v0, const V3 v1, const V3 v2);
 
 #endif

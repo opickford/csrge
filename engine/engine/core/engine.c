@@ -16,12 +16,12 @@
 #include <stdlib.h>
 
 // Internal helpers.
-static void engine_setup_ecs(engine_t* engine)
+static void engine_setup_ecs(Engine* engine)
 {
     cecs* ecs = cecs_create();
     engine->ecs = ecs;
 
-    // Setup core components, mesh_instance_t etc.
+    // Setup core components, MeshInstance etc.
     core_components_init(ecs);
 
     // TODO: Systems should initialise their own views.
@@ -34,10 +34,10 @@ static void engine_setup_ecs(engine_t* engine)
     engine->lighting_view_id = cecs_view_create(ecs, CECS_COMPONENT_ID_TO_BITSET(COMPONENT_POINT_LIGHT), 0);
 }
 
-status_t engine_init(engine_t* engine, int window_width, int window_height)
+Status engine_init(Engine* engine, int window_width, int window_height)
 {
     log_info("Initialising the engine.");
-    memset(engine, 0, sizeof(engine_t));
+    memset(engine, 0, sizeof(Engine));
 
     // Set some default settings.
     engine->upscaling_factor = 1;
@@ -47,7 +47,7 @@ status_t engine_init(engine_t* engine, int window_width, int window_height)
     engine_setup_ecs(engine);
 
     // Initialise the renderer.
-    status_t status = renderer_init(&engine->renderer, (int)(window_width / engine->upscaling_factor), (int)(window_height / engine->upscaling_factor));
+    Status status = renderer_init(&engine->renderer, (int)(window_width / engine->upscaling_factor), (int)(window_height / engine->upscaling_factor));
     if (STATUS_OK != status)
     {
         log_error("Failed to renderer_init because of %s", status_to_str(status));
@@ -67,11 +67,11 @@ status_t engine_init(engine_t* engine, int window_width, int window_height)
     engine->window.on_keyup = &engine_process_keyup;
     engine->window.on_lmbdown = &engine_process_lmbdown;
 
-    // Initialise the ui_t.
-    status = ui_init(&engine->ui, &engine->renderer.target.canvas);
+    // Initialise the UI.
+    status = UI_init(&engine->UI, &engine->renderer.target.canvas);
     if (STATUS_OK != status)
     {
-        log_error("Failed to ui_init because of %s", status_to_str(status));
+        log_error("Failed to UI_init because of %s", status_to_str(status));
         return status;
     }
 
@@ -91,12 +91,12 @@ status_t engine_init(engine_t* engine, int window_width, int window_height)
     log_info("Fired engine_on_init event.");
     engine_on_init(engine);
 
-    log_info("engine_t successfully initialised.");
+    log_info("Engine successfully initialised.");
 
     return STATUS_OK;
 }
 
-void engine_run(engine_t* engine)
+void engine_run(Engine* engine)
 {
     // TODO: Outline somewhere nicer.
     const float physics_dt = 1.f / 60.f; // 60fps
@@ -115,7 +115,7 @@ void engine_run(engine_t* engine)
     // TODO: Struct of perf data?
     int fps = 0;
     float dt = 0;
-    int draw_ui_ms = 0;
+    int draw_UI_ms = 0;
 
     // Start the timers.
     QueryPerformanceCounter(&startTime);
@@ -131,7 +131,7 @@ void engine_run(engine_t* engine)
     char handle_input_str[64] = "";
     char rt_clear_str[64] = "";
     char render_str[64] = "";
-    char ui_draw_str[64] = "";
+    char UI_draw_str[64] = "";
     char display_str[64] = "";
     char update_str[64] = "";
     char vertices_str[64] = "";
@@ -139,24 +139,24 @@ void engine_run(engine_t* engine)
     char input_mode_str[64] = "";
     
 
-    // TODO: This can be a ui add text function
+    // TODO: This can be a UI add text function
     int y = 10;
     const int TEXT_SCALE = 1;
-    int h = engine->ui.font.char_height * TEXT_SCALE;
+    int h = engine->UI.font.char_height * TEXT_SCALE;
     
-    engine->ui.text[engine->ui.text_count++] = text_create(fps_str, 10, engine->ui.text_count * h + 10, COLOUR_LIME, TEXT_SCALE);
-    engine->ui.text[engine->ui.text_count++] = text_create(dir_str, 10, engine->ui.text_count * h + 10, COLOUR_RED, TEXT_SCALE);
-    engine->ui.text[engine->ui.text_count++] = text_create(pos_str, 10, engine->ui.text_count * h + 10, COLOUR_RED, TEXT_SCALE);
-    engine->ui.text[engine->ui.text_count++] = text_create(process_messages_str, 10, engine->ui.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
-    engine->ui.text[engine->ui.text_count++] = text_create(handle_input_str, 10, engine->ui.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
-    engine->ui.text[engine->ui.text_count++] = text_create(rt_clear_str, 10, engine->ui.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
-    engine->ui.text[engine->ui.text_count++] = text_create(render_str, 10, engine->ui.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
-    engine->ui.text[engine->ui.text_count++] = text_create(ui_draw_str, 10, engine->ui.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
-    engine->ui.text[engine->ui.text_count++] = text_create(display_str, 10, engine->ui.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
-    engine->ui.text[engine->ui.text_count++] = text_create(update_str, 10, engine->ui.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
-    engine->ui.text[engine->ui.text_count++] = text_create(vertices_str, 10, engine->ui.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
-    engine->ui.text[engine->ui.text_count++] = text_create(physics_str, 10, engine->ui.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
-    engine->ui.text[engine->ui.text_count++] = text_create(input_mode_str, 10, engine->ui.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
+    engine->UI.text[engine->UI.text_count++] = text_create(fps_str, 10, engine->UI.text_count * h + 10, COLOUR_LIME, TEXT_SCALE);
+    engine->UI.text[engine->UI.text_count++] = text_create(dir_str, 10, engine->UI.text_count * h + 10, COLOUR_RED, TEXT_SCALE);
+    engine->UI.text[engine->UI.text_count++] = text_create(pos_str, 10, engine->UI.text_count * h + 10, COLOUR_RED, TEXT_SCALE);
+    engine->UI.text[engine->UI.text_count++] = text_create(process_messages_str, 10, engine->UI.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
+    engine->UI.text[engine->UI.text_count++] = text_create(handle_input_str, 10, engine->UI.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
+    engine->UI.text[engine->UI.text_count++] = text_create(rt_clear_str, 10, engine->UI.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
+    engine->UI.text[engine->UI.text_count++] = text_create(render_str, 10, engine->UI.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
+    engine->UI.text[engine->UI.text_count++] = text_create(UI_draw_str, 10, engine->UI.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
+    engine->UI.text[engine->UI.text_count++] = text_create(display_str, 10, engine->UI.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
+    engine->UI.text[engine->UI.text_count++] = text_create(update_str, 10, engine->UI.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
+    engine->UI.text[engine->UI.text_count++] = text_create(vertices_str, 10, engine->UI.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
+    engine->UI.text[engine->UI.text_count++] = text_create(physics_str, 10, engine->UI.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
+    engine->UI.text[engine->UI.text_count++] = text_create(input_mode_str, 10, engine->UI.text_count * h + 10, COLOUR_WHITE, TEXT_SCALE);
 
     engine->running = 1;
 
@@ -164,7 +164,7 @@ void engine_run(engine_t* engine)
 
     while (engine->running)
     {
-        timer_t t = timer_start();
+        Timer t = timer_start();
 
         // Process the application window messages.
         if (!window_process_messages())
@@ -229,7 +229,7 @@ void engine_run(engine_t* engine)
         render_target_clear(&engine->renderer.target, engine->scene.bg_colour);
         snprintf(rt_clear_str, sizeof(rt_clear_str), "RTClear: %d", timer_get_elapsed(&t));
 
-        m4_t view_matrix;
+        M4 view_matrix;
         calculate_view_matrix(&engine->renderer.camera, view_matrix);
 
         // Render scene.
@@ -245,11 +245,11 @@ void engine_run(engine_t* engine)
         
         snprintf(render_str, sizeof(render_str), "Render: %d", timer_get_elapsed(&t));
          
-        // Draw ui elements.
+        // Draw UI elements.
         timer_restart(&t);
-        ui_draw(&engine->ui, engine->upscaling_factor);
-        snprintf(ui_draw_str, sizeof(render_str), "DrawUI: %d", draw_ui_ms);
-        draw_ui_ms = timer_get_elapsed(&t); // Must be done a frame late.
+        UI_draw(&engine->UI, engine->upscaling_factor);
+        snprintf(UI_draw_str, sizeof(render_str), "DrawUI: %d", draw_UI_ms);
+        draw_UI_ms = timer_get_elapsed(&t); // Must be done a frame late.
 
         // TODO: TEMP: Debugging rendering the velocities.
         if (g_debug_velocities) 
@@ -259,20 +259,20 @@ void engine_run(engine_t* engine)
 
             while (cecs_view_iter_next(&it))
             {
-                transform_t* ts = cecs_get_column(it, COMPONENT_TRANSFORM);
-                physics_data_t* pds = cecs_get_column(it, COMPONENT_PHYSICS_DATA);
+                Transform* ts = cecs_get_column(it, COMPONENT_TRANSFORM);
+                PhysicsData* pds = cecs_get_column(it, COMPONENT_PHYSICS_DATA);
 
                 for (uint32_t i = 0; i < it.num_entities; ++i)
                 {
-                    v3_t vel = pds[i].velocity;
+                    V3 vel = pds[i].velocity;
                     float speed = v3_size(vel);
                     if (speed == 0.f) continue;
 
-                    //v3_t dir = v3_mul_f(vel, 1.f / speed);
-                    v3_t dir = vel;
-                    v3_t start = ts[i].position;
-                    v3_t end = v3_add_v3(start, v3_mul_f(dir, 1.f));
-                    debug_draw_world_space_line(&engine->renderer.target.canvas, &engine->renderer.settings, view_matrix, start, end, (v3_t) { 1, 0,0 });
+                    //V3 dir = v3_mul_f(vel, 1.f / speed);
+                    V3 dir = vel;
+                    V3 start = ts[i].position;
+                    V3 end = v3_add_v3(start, v3_mul_f(dir, 1.f));
+                    debug_draw_world_space_line(&engine->renderer.target.canvas, &engine->renderer.settings, view_matrix, start, end, (V3) { 1, 0,0 });
 
                 }
             }
@@ -295,14 +295,14 @@ void engine_run(engine_t* engine)
             cecs_view_iter it = cecs_view_iter_create(ecs, engine->render_view_id);
             while (cecs_view_iter_next(&it))
             {
-                mesh_instance_t* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
+                MeshInstance* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
 
                 for (int i = 0; i < it.num_entities; ++i)
                 {
-                    mesh_instance_t* mi = &mis[i];
+                    MeshInstance* mi = &mis[i];
 
-                    const scene_t* scene = &engine->scene;
-                    const mesh_base_t* mb = &scene->mesh_bases.bases[mi->mb_id];
+                    const Scene* scene = &engine->scene;
+                    const MeshBase* mb = &scene->mesh_bases.bases[mi->mb_id];
                     total_faces += mb->num_faces;
                     ++mis_count;
                 }
@@ -336,14 +336,14 @@ void engine_run(engine_t* engine)
     }
 }
 
-void engine_destroy(engine_t* engine)
+void engine_destroy(Engine* engine)
 {
     // TODO: this stuff.
-    ui_destroy(&engine->ui);
+    UI_destroy(&engine->UI);
     window_destroy(&engine->window);
 }
 
-void engine_handle_input(engine_t* engine, float dt)
+void engine_handle_input(Engine* engine, float dt)
 {
     // Note the mouse state is updated elsewhere
     // Update keyboard state.
@@ -361,7 +361,7 @@ void engine_handle_input(engine_t* engine, float dt)
     }
 
     // TODO: Should pass to noclip controller function.
-    camera_t* camera = &engine->renderer.camera;
+    Camera* camera = &engine->renderer.camera;
 
     // TODO: Could move this to an input handler or something. 
     //       Not sure if necessary.
@@ -435,15 +435,15 @@ void engine_handle_input(engine_t* engine, float dt)
     }
     if (CSRGE_KEYDOWN(keys['A']))
     {
-        v3_t up = { 0, 1, 0 };
-        v3_t right = v3_normalised(cross(camera->direction, up));
+        V3 up = { 0, 1, 0 };
+        V3 right = v3_normalised(cross(camera->direction, up));
 
         v3_sub_eq_v3(&camera->position, v3_mul_f(right, meters_per_second));
     }
     if (CSRGE_KEYDOWN(keys['D']))
     {
-        v3_t up = { 0, 1, 0 };
-        v3_t right = v3_normalised(cross(camera->direction, up));
+        V3 up = { 0, 1, 0 };
+        V3 right = v3_normalised(cross(camera->direction, up));
 
         v3_add_eq_v3(&camera->position, v3_mul_f(right, meters_per_second));
     }
@@ -457,12 +457,12 @@ void engine_handle_input(engine_t* engine, float dt)
     }
 }
 
-// window_t events
+// Window events
 static void engine_on_resize(void* ctx)
 {
-    engine_t* engine = (engine_t*)ctx;
+    Engine* engine = (Engine*)ctx;
 
-    status_t status = renderer_resize(&engine->renderer, 
+    Status status = renderer_resize(&engine->renderer, 
         (int)(engine->window.width / engine->upscaling_factor), 
         (int)(engine->window.height / engine->upscaling_factor));
 
@@ -483,7 +483,7 @@ static void engine_process_keyup(void* ctx, WPARAM wParam)
 {
     // TODO: Handle failure for all these win32 calls??
 
-    engine_t* engine = (engine_t*)ctx;
+    Engine* engine = (Engine*)ctx;
 
     // Handle any engine specific keybinds, if
     // not engine specific, pass to user callback.
@@ -494,7 +494,7 @@ static void engine_process_keyup(void* ctx, WPARAM wParam)
         ++engine->input_mode;
         if (engine->input_mode == INPUT_MODE_INVALID)
         {
-            engine->input_mode = (input_mode_t)0;
+            engine->input_mode = (InputMode)0;
         }
 
         switch (engine->input_mode)
@@ -575,7 +575,7 @@ static void engine_process_keyup(void* ctx, WPARAM wParam)
 
 static void engine_process_lmbdown(void* ctx)
 {
-    engine_t* engine = (engine_t*)ctx;
+    Engine* engine = (Engine*)ctx;
 
     engine_on_lmbdown(ctx);
 }

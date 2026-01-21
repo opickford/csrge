@@ -5,31 +5,31 @@
 
 #include <chds/vec.h>
 
-typedef struct v3 v3_t;
-typedef struct mesh_base mesh_base_t;
-typedef struct physics physics_t;
-typedef struct scene scene_t;
+typedef struct v3 V3;
+typedef struct mesh_base MeshBase;
+typedef struct physics Physics;
+typedef struct scene Scene;
 
 typedef enum
 {
     COLLISION_SHAPE_ELLIPSOID,
     COLLISION_SHAPE_MESH
-} collision_shape_type_t;
+} CollisionShapeType;
 
 typedef struct
 {
-    const mesh_base_t* mb;
-    CHDS_VEC(v3_t) wsps;
-} collision_mesh_t;
+    const MeshBase* mb;
+    CHDS_VEC(V3) wsps;
+} CollisionMesh;
 
 typedef struct
 {
     // Tagged union for the type narrow phase shape.
-    collision_shape_type_t type;
+    CollisionShapeType type;
     union
     {
-        collision_mesh_t mesh;
-        v3_t ellipsoid;
+        CollisionMesh mesh;
+        V3 ellipsoid;
         float radius;
     };
 
@@ -38,15 +38,15 @@ typedef struct
     uint8_t scale_dirty; // Recalculate bounding sphere radius
 
     // Broad phase shape.
-    bounding_sphere_t bs;
+    BoundingSphere bs;
 
-} collision_shape_t;
+} CollisionShape;
 
 // TODO: Collider stuff could be separated into a new file but not necessary for now.
 // TODO: In the future this could contain some callback etc.
 typedef struct collider
 {
-    collision_shape_t shape;
+    CollisionShape shape;
 
     // Ratio of relative velocity of separation to relative velocity of approach.
     // Determines collisions elasticity (how much energy loss)
@@ -57,11 +57,11 @@ typedef struct collider
     // 0 = no friction, 1 is as much friction as the normal force.
     float friction_coeff;
 
-} collider_t;
+} Collider;
 
-void collider_init(collider_t* c);
-void collider_destroy(collider_t* c);
+void collider_init(Collider* c);
+void collider_destroy(Collider* c);
 
-uint8_t handle_collisions(physics_t* physics, scene_t* scene);
+uint8_t handle_collisions(Physics* physics, Scene* scene);
 
 #endif

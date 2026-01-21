@@ -12,26 +12,26 @@
 
 /*
 
-A mesh_base_t stores the static data of a Mesh. 
+A MeshBase stores the static data of a Mesh. 
 Currently, it essentially is a struct for a parsed .obj file.
 
-A mesh_instance_t will store the ID of a mesh_base_t and read any static data from
+A MeshInstance will store the ID of a MeshBase and read any static data from
 there, therefore, if the base's data was edited, all instances would also be
 updated.
 
-It doesn't make sense to iterate over each mesh_base_t, therefore, there is no
+It doesn't make sense to iterate over each MeshBase, therefore, there is no
 need for use of DOD.
 
-It also doesn't really make sense to remove a mesh_base_t, so the mesh_base_id_t will
+It also doesn't really make sense to remove a MeshBase, so the MeshBaseId will
 always remain valid as an index without extra indirection logic.
 
 */
 
-typedef int mesh_base_id_t;
+typedef int MeshBaseId;
 
 typedef struct mesh_base
 {
-	mesh_base_id_t id; // The index of the mesh base in it's mesh_bases_t container.
+	MeshBaseId id; // The index of the mesh base in it's MeshBases container.
 
 	int num_faces;
 	int num_positions;
@@ -42,33 +42,33 @@ typedef struct mesh_base
 	CHDS_VEC(int) normal_indices;
     CHDS_VEC(int) uv_indices;
 
-    CHDS_VEC(v3_t) object_space_positions;
-	CHDS_VEC(v3_t) object_space_normals;
-	CHDS_VEC(v2_t) uvs; // TODO: Specifiy for textures?
+    CHDS_VEC(V3) object_space_positions;
+	CHDS_VEC(V3) object_space_normals;
+	CHDS_VEC(V2) uvs; // TODO: Specifiy for textures?
 	
-	v3_t centre;
+	V3 centre;
 
-} mesh_base_t;
+} MeshBase;
 
-// TODO: No longer need this, CHDS_VEC(mesh_base_t)?
+// TODO: No longer need this, CHDS_VEC(MeshBase)?
 typedef struct
 {
-	mesh_base_t* bases;
+	MeshBase* bases;
 	int count;
-} mesh_bases_t;
+} MeshBases;
 
 // Helpers
 void parse_obj_counts(FILE* file, int* num_positions, int* num_uvs, int* num_normals, int* num_faces);
 
-// mesh_base_t API
-status_t mesh_base_init(mesh_base_t* mb);
-status_t mesh_base_from_obj(mesh_base_t* mb, const char* filename);
-void mesh_base_destroy(mesh_base_t* mb);
+// MeshBase API
+Status mesh_base_init(MeshBase* mb);
+Status mesh_base_from_obj(MeshBase* mb, const char* filename);
+void mesh_base_destroy(MeshBase* mb);
 
-// mesh_bases_t API
-status_t mesh_bases_init(mesh_bases_t* mbs);
-mesh_base_id_t mesh_bases_add(mesh_bases_t* mbs);
-void mesh_bases_destroy(mesh_bases_t* mbs);
+// MeshBases API
+Status mesh_bases_init(MeshBases* mbs);
+MeshBaseId mesh_bases_add(MeshBases* mbs);
+void mesh_bases_destroy(MeshBases* mbs);
 
 #endif
  

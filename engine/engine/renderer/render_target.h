@@ -13,23 +13,23 @@
 // Contains the different buffers needed for rendering.
 typedef struct
 {
-	canvas_t canvas;
+	Canvas canvas;
 	float* depth_buffer;
 
-} render_target_t;
+} RenderTarget;
 
 // TODO: .c file?
-inline status_t render_target_init(render_target_t* rt, const int width, const int height)
+inline Status render_target_init(RenderTarget* rt, const int width, const int height)
 {
-    memset(rt, 0, sizeof(render_target_t));
+    memset(rt, 0, sizeof(RenderTarget));
 
-    status_t status = canvas_init(&rt->canvas, width, height);
+    Status status = canvas_init(&rt->canvas, width, height);
     if (STATUS_OK != status)
     {
         return status;
     }
 
-    // TODO: Refactor to be a depth_buffer_t.
+    // TODO: Refactor to be a DepthBuffer.
     rt->depth_buffer = malloc((size_t)width * height * sizeof(float));
 
     if (!rt->depth_buffer)
@@ -41,9 +41,9 @@ inline status_t render_target_init(render_target_t* rt, const int width, const i
     return STATUS_OK;
 }
 
-inline status_t render_target_resize(render_target_t* rt, int width, int height)
+inline Status render_target_resize(RenderTarget* rt, int width, int height)
 {
-    status_t status = canvas_resize(&rt->canvas, width, height);
+    Status status = canvas_resize(&rt->canvas, width, height);
 
     if (STATUS_OK != status)
     {
@@ -67,7 +67,7 @@ inline status_t render_target_resize(render_target_t* rt, int width, int height)
     return STATUS_OK;
 }
 
-inline void render_target_clear(render_target_t* rt, uint32_t bg_colour)
+inline void render_target_clear(RenderTarget* rt, uint32_t bg_colour)
 {
     const int length = rt->canvas.width * rt->canvas.height;
 
@@ -89,7 +89,7 @@ inline void render_target_clear(render_target_t* rt, uint32_t bg_colour)
 }
 
 
-inline void render_target_destroy(render_target_t* rt)
+inline void render_target_destroy(RenderTarget* rt)
 {
     canvas_destroy(&rt->canvas);
 

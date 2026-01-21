@@ -12,12 +12,12 @@ typedef struct
 
 	const char* defined_chars;
 
-    canvas_t atlas;
+    Canvas atlas;
 
-} font_t;
+} Font;
 
-status_t font_init(font_t* font);
+Status font_init(Font* font);
 
-int font_get_char_offset(font_t* font, char c);
+int font_get_char_offset(Font* font, char c);
 
 #endif

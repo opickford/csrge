@@ -4,10 +4,10 @@
 
 #include <math.h>
 
-text_t text_create(char* str, int x, int y, int colour, int scale)
+Text text_create(char* str, int x, int y, int colour, int scale)
 {
 	// TODO: text_init instead and modify pointer?
-	text_t text = {
+	Text text = {
 		.text = str,
 		.x = x,
 		.y = y,
@@ -18,10 +18,10 @@ text_t text_create(char* str, int x, int y, int colour, int scale)
 	return text;
 }
 
-void text_draw(canvas_t* canvas, text_t* text, font_t* font, float upscaling_factor)
+void text_draw(Canvas* canvas, Text* text, Font* font, float upscaling_factor)
 {
-	// TODO: All ui should be scaled the same so we can at least keep 
-	// consistency with the ui.
+	// TODO: All UI should be scaled the same so we can at least keep 
+	// consistency with the UI.
 	// TODO: I want the text to stay as similar as possible when upscaling.
 	
 	int scale = (int)fmaxf(text->scale / upscaling_factor, 1.f);

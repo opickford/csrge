@@ -14,22 +14,22 @@
 
 typedef struct
 {
-	// Global ui_t
-	canvas_t* canvas;
-	font_t font;
+	// Global UI
+	Canvas* canvas;
+	Font font;
 
 	// Specific widgets
 	int text_count;
-	text_t text[MAX_TEXT];
+	Text text[MAX_TEXT];
 
-} ui_t;
+} UI;
 
-status_t ui_init(ui_t* ui, canvas_t* canvas);
+Status UI_init(UI* UI, Canvas* canvas);
 
-void ui_draw(ui_t* ui, float upscaling_factor);
+void UI_draw(UI* UI, float upscaling_factor);
 
-void ui_destroy(ui_t* ui);
+void UI_destroy(UI* UI);
 
-// Functions for adding ui_t widgets?
+// Functions for adding UI widgets?
 
 #endif

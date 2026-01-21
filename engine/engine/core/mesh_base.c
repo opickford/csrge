@@ -45,14 +45,14 @@ void parse_obj_counts(FILE* file, int* num_positions, int* num_uvs, int* num_nor
 	}
 }
 
-// mesh_base_t API
-status_t mesh_base_init(mesh_base_t* mb)
+// MeshBase API
+Status mesh_base_init(MeshBase* mb)
 {
-	memset(mb, 0, sizeof(mesh_base_t));
+	memset(mb, 0, sizeof(MeshBase));
 	return STATUS_OK;
 }
 
-status_t mesh_base_from_obj(mesh_base_t* mb, const char* filename)
+Status mesh_base_from_obj(MeshBase* mb, const char* filename)
 {
 	// TODO: Eventually could check the filetype.
 	FILE* file = fopen(filename, "r");
@@ -226,7 +226,7 @@ status_t mesh_base_from_obj(mesh_base_t* mb, const char* filename)
 	return STATUS_OK;
 }
 
-void mesh_base_destroy(mesh_base_t* mb)
+void mesh_base_destroy(MeshBase* mb)
 {
     chds_vec_destroy(mb->object_space_positions);
 	chds_vec_destroy(mb->object_space_normals);
@@ -236,18 +236,18 @@ void mesh_base_destroy(mesh_base_t* mb)
 	chds_vec_destroy(mb->uv_indices);
 }
 
-// mesh_bases_t API
-status_t mesh_bases_init(mesh_bases_t* mbs)
+// MeshBases API
+Status mesh_bases_init(MeshBases* mbs)
 {
-	memset(mbs, 0, sizeof(mesh_bases_t));
+	memset(mbs, 0, sizeof(MeshBases));
 	return STATUS_OK;
 }
 
-mesh_base_id_t mesh_bases_add(mesh_bases_t* mbs)
+MeshBaseId mesh_bases_add(MeshBases* mbs)
 {
 	// Grow the array of mesh instances.
 	const int new_count = mbs->count + 1;
-	mesh_base_t* new_bases = realloc(mbs->bases, new_count * sizeof(mesh_base_t));
+	MeshBase* new_bases = realloc(mbs->bases, new_count * sizeof(MeshBase));
 
 	if (!new_bases)
 	{
@@ -255,20 +255,20 @@ mesh_base_id_t mesh_bases_add(mesh_bases_t* mbs)
 		return STATUS_ALLOC_FAILURE;
 	}
 
-	const mesh_base_id_t mb_id = mbs->count;
+	const MeshBaseId mb_id = mbs->count;
 
 	mbs->bases = new_bases;
 	mbs->count = new_count;
 
-	// Initialise the new mesh_base_t.
-	mesh_base_t* mb = &mbs->bases[mb_id];
+	// Initialise the new MeshBase.
+	MeshBase* mb = &mbs->bases[mb_id];
 	mesh_base_init(mb);
 	mb->id = mb_id;
 
 	return mb_id;
 }
 
-void mesh_bases_destroy(mesh_bases_t* mbs)
+void mesh_bases_destroy(MeshBases* mbs)
 {
 	free(mbs->bases);
 }

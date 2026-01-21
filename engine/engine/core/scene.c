@@ -4,9 +4,9 @@
 
 #include <string.h>
 
-status_t scene_init(scene_t* scene)
+Status scene_init(Scene* scene)
 {
-	memset(scene, 0, sizeof(scene_t));
+	memset(scene, 0, sizeof(Scene));
 
 	mesh_bases_init(&scene->mesh_bases);
 
@@ -17,14 +17,14 @@ status_t scene_init(scene_t* scene)
 	return STATUS_OK;
 }
 
-status_t scene_destroy(scene_t* scene)
+Status scene_destroy(Scene* scene)
 {
 	// TODO: Cleanup
 	log_warn("Need to implement scene_destroy.");
 	return STATUS_OK;
 }
 
-mesh_base_id_t scene_add_mesh_base(scene_t* scene)
+MeshBaseId scene_add_mesh_base(Scene* scene)
 {
 	return mesh_bases_add(&scene->mesh_bases);
 }

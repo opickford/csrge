@@ -8,7 +8,7 @@
 // TODO: Refactor this script to really make sense, e.g. we can pass in a camera offset.
 uint8_t third_person = 1;
 
-inline void player_controller_physics(engine_t* engine, cecs_entity_id eid, float dt)
+inline void player_controller_physics(Engine* engine, cecs_entity_id eid, float dt)
 {
     if (engine->input_mode != INPUT_MODE_GAME) return;
 
@@ -29,12 +29,12 @@ inline void player_controller_physics(engine_t* engine, cecs_entity_id eid, floa
     
     */
 
-    const static v3_t up = { 0, 1.f, 0 };
-    const v3_t forward = v3_normalised((v3_t) { engine->renderer.camera.direction.x, 0.f, engine->renderer.camera.direction.z });
-    const v3_t right = v3_normalised(cross(forward, up));
+    const static V3 up = { 0, 1.f, 0 };
+    const V3 forward = v3_normalised((V3) { engine->renderer.camera.direction.x, 0.f, engine->renderer.camera.direction.z });
+    const V3 right = v3_normalised(cross(forward, up));
 
-    physics_data_t* pd = cecs_get_component(engine->ecs, eid, COMPONENT_PHYSICS_DATA);
-    transform_t* t = cecs_get_component(engine->ecs, eid, COMPONENT_TRANSFORM);
+    PhysicsData* pd = cecs_get_component(engine->ecs, eid, COMPONENT_PHYSICS_DATA);
+    Transform* t = cecs_get_component(engine->ecs, eid, COMPONENT_TRANSFORM);
 
     // By multiplying by dt we're essentially converting the force into an impulse.
     const float speed = 20.f * dt * pd->mass;
@@ -63,24 +63,24 @@ inline void player_controller_physics(engine_t* engine, cecs_entity_id eid, floa
     }    
 }
 
-inline void player_controller_camera(engine_t* engine, cecs_entity_id eid)
+inline void player_controller_camera(Engine* engine, cecs_entity_id eid)
 {
     if (engine->input_mode != INPUT_MODE_GAME) return;
 
-    transform_t* t = cecs_get_component(engine->ecs, eid, COMPONENT_TRANSFORM);
+    Transform* t = cecs_get_component(engine->ecs, eid, COMPONENT_TRANSFORM);
 
-    const static v3_t up = { 0, 1.f, 0 };
-    const v3_t forward = v3_normalised((v3_t) { engine->renderer.camera.direction.x, 0.f, engine->renderer.camera.direction.z });
-    const v3_t right = v3_normalised(cross(forward, up));
+    const static V3 up = { 0, 1.f, 0 };
+    const V3 forward = v3_normalised((V3) { engine->renderer.camera.direction.x, 0.f, engine->renderer.camera.direction.z });
+    const V3 right = v3_normalised(cross(forward, up));
 
-    v3_t player_pos = v3_lerp(t->previous_position, t->position, engine->renderer.frame_data.physics_alpha);
+    V3 player_pos = v3_lerp(t->previous_position, t->position, engine->renderer.frame_data.physics_alpha);
     if (third_person)
     {
         const static float cam_dist = 4.f;
         const static float lateral_offset = 2.f;
         const static float vertical_offset = 2.f;
 
-        v3_t pos = v3_sub_v3(player_pos, v3_mul_f(engine->renderer.camera.direction, cam_dist));
+        V3 pos = v3_sub_v3(player_pos, v3_mul_f(engine->renderer.camera.direction, cam_dist));
         v3_add_eq_v3(&pos, v3_mul_f(right, lateral_offset));
         v3_add_eq_v3(&pos, v3_mul_f(up, vertical_offset));
         engine->renderer.camera.position = pos;

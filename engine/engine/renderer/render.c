@@ -30,25 +30,25 @@
 // TODO: Something important would be to make the buffer accesses easier.
 
 void debug_draw_point_lights(
-    canvas_t* canvas, 
+    Canvas* canvas, 
     const cecs* ecs,
     const cecs_view_id lighting_view,
-    const frame_data_t* frame_data, 
-    const render_settings_t* settings
+    const FrameData* frame_data, 
+    const RenderSettings* settings
     )
 {
-    const v3_t* vsps = frame_data->point_lights_view_space_positions;
+    const V3* vsps = frame_data->point_lights_view_space_positions;
     int vsps_offset = 0;
 
     // Debug draw point light icons as rects.
     cecs_view_iter it = cecs_view_iter_create(ecs, lighting_view);
     while (cecs_view_iter_next(&it))
     {
-        point_light_t* pls = cecs_get_column(it, COMPONENT_POINT_LIGHT);
+        PointLight* pls = cecs_get_column(it, COMPONENT_POINT_LIGHT);
 
         for (int i = 0; i < it.num_entities; ++i)
         {
-            v4_t p = v3_to_v4(vsps[vsps_offset], 1.f);
+            V4 p = v3_to_v4(vsps[vsps_offset], 1.f);
             ++vsps_offset;
 
             // Only draw if depth is visibile in clip space.
@@ -57,10 +57,10 @@ void debug_draw_point_lights(
                 continue;
             }
 
-            v4_t projected;
+            V4 projected;
             project(canvas, settings->projection_matrix, p, &projected);
 
-            v3_t colour_v3 = pls[i].colour;
+            V3 colour_v3 = pls[i].colour;
 
             int colour = float_rgb_to_int(colour_v3.x, colour_v3.y, colour_v3.z);
 
@@ -78,10 +78,10 @@ void debug_draw_point_lights(
     }
 }
 
-void debug_draw_view_space_point(canvas_t* canvas, const render_settings_t* settings, v3_t point, int colour)
+void debug_draw_view_space_point(Canvas* canvas, const RenderSettings* settings, V3 point, int colour)
 {
     // Convert from world space to screen space.
-    v4_t vsp = v3_to_v4(point, 1.f);
+    V4 vsp = v3_to_v4(point, 1.f);
 
     // Don't draw points behind the camera.
     if (vsp.z > -settings->near_plane)
@@ -89,7 +89,7 @@ void debug_draw_view_space_point(canvas_t* canvas, const render_settings_t* sett
         return;
     }
 
-    v4_t ssp;
+    V4 ssp;
     project(canvas, settings->projection_matrix, vsp, &ssp);
 
     int n = 2;
@@ -101,11 +101,11 @@ void debug_draw_view_space_point(canvas_t* canvas, const render_settings_t* sett
     draw_rect(canvas, x0, y0, x1, y1, colour);
 }
 
-void debug_draw_normals(canvas_t* canvas, const frame_data_t* frame_data, const render_settings_t* settings, const scene_t* scene)
+void debug_draw_normals(Canvas* canvas, const FrameData* frame_data, const RenderSettings* settings, const Scene* scene)
 {
     /*
-    const mesh_instance_t* mis = scene->mesh_instances.instances;
-    const mesh_base_t* mbs = scene->mesh_bases.bases;
+    const MeshInstance* mis = scene->mesh_instances.instances;
+    const MeshBase* mbs = scene->mesh_bases.bases;
 
     // TODO: Will need to calculate the actual stride of a vertex with the number of light space positions
     //		 too. Maybe to simplify this for all of my functions, should calculate this and keep it in the renderer.
@@ -121,8 +121,8 @@ void debug_draw_normals(canvas_t* canvas, const frame_data_t* frame_data, const 
 
     for (int i = 0; i < num_visible_mis; ++i)
     {
-        const mesh_instance_t* mi = &mis[visible_mi_indices[i]];
-        const mesh_base_t* mb = &mbs[mi->mb_id];
+        const MeshInstance* mi = &mis[visible_mi_indices[i]];
+        const MeshBase* mb = &mbs[mi->mb_id];
 
         const int* position_indices = mb->position_indices;
         const int* normal_indices = mb->normal_indices;
@@ -138,18 +138,18 @@ void debug_draw_normals(canvas_t* canvas, const frame_data_t* frame_data, const 
                 const int p_index = vsp_offset + position_indices[face_index + k] * STRIDE_POSITION;
                 const int n_index = vsn_offset + normal_indices[face_index + k] * STRIDE_NORMAL;
 
-                // TODO: Would just storing as a v3_t be better?
-                const v3_t p = v3_read(vsps + p_index);
-                const v3_t n = v3_read(vsns + n_index);
+                // TODO: Would just storing as a V3 be better?
+                const V3 p = v3_read(vsps + p_index);
+                const V3 n = v3_read(vsns + n_index);
 
                 const float length = 2.5f;
 
-                v3_t end = v3_add_v3(p, v3_mul_f(n, length));
+                V3 end = v3_add_v3(p, v3_mul_f(n, length));
 
-                v4_t start_v4 = v3_to_v4(p, 1.f);
-                v4_t end_v4 = v3_to_v4(end, 1.f);
+                V4 start_v4 = v3_to_v4(p, 1.f);
+                V4 end_v4 = v3_to_v4(end, 1.f);
 
-                v4_t ss_start, ss_end;
+                V4 ss_start, ss_end;
                 project(canvas, settings->projection_matrix, start_v4, &ss_start);
                 project(canvas, settings->projection_matrix, end_v4, &ss_end);
 
@@ -162,7 +162,7 @@ void debug_draw_normals(canvas_t* canvas, const frame_data_t* frame_data, const 
 }
 
 /*
-void debug_draw_bounding_spheres(canvas_t* canvas, const render_settings_t* settings, const Models* models, const m4_t view_matrix)
+void debug_draw_bounding_spheres(Canvas* canvas, const RenderSettings* settings, const Models* models, const M4 view_matrix)
 {
 	// TODO: This doesn't really work.
 
@@ -174,7 +174,7 @@ void debug_draw_bounding_spheres(canvas_t* canvas, const render_settings_t* sett
 	{
 		int sphere_index = i * STRIDE_SPHERE;
 
-		v3_t view_centre_v3 = {
+		V3 view_centre_v3 = {
 			models->mis_bounding_spheres[sphere_index],
 			models->mis_bounding_spheres[sphere_index + 1],
 			models->mis_bounding_spheres[sphere_index + 2]
@@ -182,9 +182,9 @@ void debug_draw_bounding_spheres(canvas_t* canvas, const render_settings_t* sett
 
 		debug_draw_view_space_point(canvas, settings, view_centre_v3, COLOUR_LIME);
 
-		v4_t view_centre = v3_to_v4(view_centre_v3, 1.f);
+		V4 view_centre = v3_to_v4(view_centre_v3, 1.f);
 
-		v4_t view_centre = m4_mul_v4(view_matrix, world_centre_v4);
+		V4 view_centre = m4_mul_v4(view_matrix, world_centre_v4);
 
 		if (view_centre.z > -settings->near_plane)
 		{
@@ -193,19 +193,19 @@ void debug_draw_bounding_spheres(canvas_t* canvas, const render_settings_t* sett
 
 		float radius = models->mis_bounding_spheres[3];
 
-		v4_t world_bottom = world_centre_v4;
+		V4 world_bottom = world_centre_v4;
 		world_bottom.y -= radius;
 
-		v4_t view_bottom = m4_mul_v4(view_matrix, world_bottom);
+		V4 view_bottom = m4_mul_v4(view_matrix, world_bottom);
 
-		v4_t world_top = world_centre_v4;
+		V4 world_top = world_centre_v4;
 		world_top.y += radius;
 
-		v4_t view_top = m4_mul_v4(view_matrix, world_top);
+		V4 view_top = m4_mul_v4(view_matrix, world_top);
 
-		v4_t pc = project(canvas, settings->projection_matrix, view_centre);
-		v4_t pt = project(canvas, settings->projection_matrix, view_top);
-		v4_t pb = project(canvas, settings->projection_matrix, view_bottom);
+		V4 pc = project(canvas, settings->projection_matrix, view_centre);
+		V4 pt = project(canvas, settings->projection_matrix, view_top);
+		V4 pb = project(canvas, settings->projection_matrix, view_bottom);
 		
 		float pr = fabsf(pb.y - pt.y) / 2.f;
 		
@@ -213,12 +213,12 @@ void debug_draw_bounding_spheres(canvas_t* canvas, const render_settings_t* sett
 	}
 }*/
 
-void debug_draw_world_space_point(canvas_t* canvas, const render_settings_t* settings, v3_t point, const m4_t view_matrix, int colour)
+void debug_draw_world_space_point(Canvas* canvas, const RenderSettings* settings, V3 point, const M4 view_matrix, int colour)
 {
 	// Convert from world space to screen space.
-	v4_t wsp = v3_to_v4(point, 1.f);
+	V4 wsp = v3_to_v4(point, 1.f);
 
-	v4_t vsp;
+	V4 vsp;
 	m4_mul_v4(view_matrix, wsp, &vsp);
 	
 	// Don't draw points behind the camera.
@@ -227,7 +227,7 @@ void debug_draw_world_space_point(canvas_t* canvas, const render_settings_t* set
 		return;
 	}
 
-	v4_t ssp;
+	V4 ssp;
 	project(canvas, settings->projection_matrix, vsp, &ssp);
 
 	// TODO: Could be a draw 2d rect function.
@@ -240,12 +240,12 @@ void debug_draw_world_space_point(canvas_t* canvas, const render_settings_t* set
 	draw_rect(canvas, x0, y0, x1, y1, colour);
 }
 
-void debug_draw_world_space_line(canvas_t* canvas, const render_settings_t* settings, const m4_t view_matrix, v3_t v0, v3_t v1, v3_t colour)
+void debug_draw_world_space_line(Canvas* canvas, const RenderSettings* settings, const M4 view_matrix, V3 v0, V3 v1, V3 colour)
 {
-	v4_t ws_v0 = v3_to_v4(v0, 1.f);
-	v4_t ws_v1 = v3_to_v4(v1, 1.f);
+	V4 ws_v0 = v3_to_v4(v0, 1.f);
+	V4 ws_v1 = v3_to_v4(v1, 1.f);
 
-	v4_t vs_v0, vs_v1;
+	V4 vs_v0, vs_v1;
 	m4_mul_v4(view_matrix, ws_v0, &vs_v0);
 	m4_mul_v4(view_matrix, ws_v1, &vs_v1);
 
@@ -280,7 +280,7 @@ void debug_draw_world_space_line(canvas_t* canvas, const render_settings_t* sett
 		vs_v1.z = -settings->near_plane;
 	}
 
-	v4_t ss_v0, ss_v1; 
+	V4 ss_v0, ss_v1; 
 	project(canvas, settings->projection_matrix, vs_v0, &ss_v0);
 	project(canvas, settings->projection_matrix, vs_v1, &ss_v1);
 
@@ -289,12 +289,12 @@ void debug_draw_world_space_line(canvas_t* canvas, const render_settings_t* sett
 	draw_line(canvas, (int)ss_v0.x, (int)ss_v0.y, (int)ss_v1.x, (int)ss_v1.y, colour_int);
 }
 
-void draw_scanline(render_target_t* rt,
+void draw_scanline(RenderTarget* rt,
 	int x0, int x1,
 	int y,
 	float z0, float z1,
 	float w0, float w1,
-	v3_t start_colour, v3_t end_colour)
+	V3 start_colour, V3 end_colour)
 {
 	// TODO: Globals could be used for the render target pixels and depth buffer to make faster? Maybe? Would need to profile idk.
 
@@ -326,10 +326,10 @@ void draw_scanline(render_target_t* rt,
 	float z_step = (z1 - z0) * inv_dx;
 
 	
-	v3_t colour_step = v3_mul_f(v3_sub_v3(end_colour, start_colour), inv_dx);
+	V3 colour_step = v3_mul_f(v3_sub_v3(end_colour, start_colour), inv_dx);
 
 	
-	v3_t colour = start_colour;
+	V3 colour = start_colour;
 
 	for (unsigned int i = 0; i < dx; ++i)
 	{
@@ -358,7 +358,7 @@ void draw_scanline(render_target_t* rt,
 	}
 }
 
-void draw_flat_bottom_triangle(render_target_t* rt, float* vc0, float* vc1, float* vc2)
+void draw_flat_bottom_triangle(RenderTarget* rt, float* vc0, float* vc1, float* vc2)
 {
 	// Sort the flat vertices left to right.
 	if (vc1[0] > vc2[0])
@@ -366,13 +366,13 @@ void draw_flat_bottom_triangle(render_target_t* rt, float* vc0, float* vc1, floa
         SWAP(float*, vc1, vc2);
 	}
 
-	const v4_t v0 = v4_read(vc0);
-	const v4_t v1 = v4_read(vc1);
-	const v4_t v2 = v4_read(vc2);
+	const V4 v0 = v4_read(vc0);
+	const V4 v1 = v4_read(vc1);
+	const V4 v2 = v4_read(vc2);
 
-	const v3_t c0 = v3_read(vc0 + 4);
-	const v3_t c1 = v3_read(vc1 + 4);
-	const v3_t c2 = v3_read(vc2 + 4);
+	const V3 c0 = v3_read(vc0 + 4);
+	const V3 c1 = v3_read(vc1 + 4);
+	const V3 c2 = v3_read(vc2 + 4);
 
 	float inv_dy = 1 / (v2.y - v0.y);
 
@@ -388,8 +388,8 @@ void draw_flat_bottom_triangle(render_target_t* rt, float* vc0, float* vc1, floa
 	int start_y = (int)(ceil(v0.y - 0.5f));
 	int end_y = (int)(ceil(v2.y - 0.5f));
 
-	v3_t dcdy0 = v3_mul_f(v3_sub_v3(c1, c0), inv_dy);
-	v3_t dcdy1 = v3_mul_f(v3_sub_v3(c2, c0), inv_dy);
+	V3 dcdy0 = v3_mul_f(v3_sub_v3(c1, c0), inv_dy);
+	V3 dcdy1 = v3_mul_f(v3_sub_v3(c2, c0), inv_dy);
 
 	for (int y = start_y; y < end_y; ++y) {
 		// Must lerp for the vertex attributes otherwise the accuracy is poor.
@@ -409,14 +409,14 @@ void draw_flat_bottom_triangle(render_target_t* rt, float* vc0, float* vc1, floa
 		int start_x = (int)((x0 - 0.5f));
 		int end_x = (int)((x1 - 0.5f));
 
-		v3_t start_colour = v3_add_v3(c0, v3_mul_f(dcdy0, a));
-		v3_t end_colour = v3_add_v3(c0, v3_mul_f(dcdy1, a));
+		V3 start_colour = v3_add_v3(c0, v3_mul_f(dcdy0, a));
+		V3 end_colour = v3_add_v3(c0, v3_mul_f(dcdy1, a));
 		
 		draw_scanline(rt, start_x, end_x, y, z0, z1, start_w, end_w, start_colour, end_colour);
 	}
 }
 
-void draw_flat_top_triangle(render_target_t* rt, float* vc0, float* vc1, float* vc2)
+void draw_flat_top_triangle(RenderTarget* rt, float* vc0, float* vc1, float* vc2)
 {
 	// Sort the flat vertices left to right.
 	if (vc0[0] > vc1[0])
@@ -424,13 +424,13 @@ void draw_flat_top_triangle(render_target_t* rt, float* vc0, float* vc1, float* 
         SWAP(float*, vc0, vc1);
 	}
 
-	v4_t v0 = v4_read(vc0);
-	v4_t v1 = v4_read(vc1);
-	v4_t v2 = v4_read(vc2);
+	V4 v0 = v4_read(vc0);
+	V4 v1 = v4_read(vc1);
+	V4 v2 = v4_read(vc2);
 
-	const v3_t c0 = v3_read(vc0 + 4);
-	const v3_t c1 = v3_read(vc1 + 4);
-	const v3_t c2 = v3_read(vc2 + 4);
+	const V3 c0 = v3_read(vc0 + 4);
+	const V3 c1 = v3_read(vc1 + 4);
+	const V3 c2 = v3_read(vc2 + 4);
 
 	float inv_dy = 1 / (v2.y - v0.y);
 
@@ -446,8 +446,8 @@ void draw_flat_top_triangle(render_target_t* rt, float* vc0, float* vc1, float* 
 	int start_y = (int)(ceil(v0.y - 0.5f));
 	int end_y = (int)(ceil(v2.y - 0.5f));
 
-	v3_t dcdy0 = v3_mul_f(v3_sub_v3(c2, c0), inv_dy);
-	v3_t dcdy1 = v3_mul_f(v3_sub_v3(c2, c1), inv_dy);
+	V3 dcdy0 = v3_mul_f(v3_sub_v3(c2, c0), inv_dy);
+	V3 dcdy1 = v3_mul_f(v3_sub_v3(c2, c1), inv_dy);
 	
 	for (int y = start_y; y < end_y; ++y) {
 		// Must lerp for the vertex attributes to get them accurately.
@@ -470,14 +470,14 @@ void draw_flat_top_triangle(render_target_t* rt, float* vc0, float* vc1, float* 
 		int start_x = (int)((x0 - 0.5f));
 		int end_x = (int)((x1 - 0.5f));
 
-		v3_t start_colour = v3_add_v3(c0, v3_mul_f(dcdy0, a));
-		v3_t end_colour = v3_add_v3(c1, v3_mul_f(dcdy1, a));
+		V3 start_colour = v3_add_v3(c0, v3_mul_f(dcdy0, a));
+		V3 end_colour = v3_add_v3(c1, v3_mul_f(dcdy1, a));
 
 		draw_scanline(rt, start_x, end_x, y, z0, z1, start_w, end_w, start_colour, end_colour);
 	}
 }
 
-void draw_triangle(render_target_t* rt, float* vc0, float* vc1, float* vc2)
+void draw_triangle(RenderTarget* rt, float* vc0, float* vc1, float* vc2)
 {
 	// vc = vertex components
 
@@ -539,7 +539,7 @@ void draw_triangle(render_target_t* rt, float* vc0, float* vc1, float* vc2)
 	draw_flat_bottom_triangle(rt, vc0, vc1, vc3);
 }
 
-void draw_textured_scanline(render_target_t* rt, int x0, int x1, int y, float z0, float z1, float w0, float w1, const v3_t c0, const v3_t c1, const v2_t uv0, const v2_t uv1, const texture_t* texture)
+void draw_textured_scanline(RenderTarget* rt, int x0, int x1, int y, float z0, float z1, float w0, float w1, const V3 c0, const V3 c1, const V2 uv0, const V2 uv1, const Texture* texture)
 {
 	// TODO: Refactor function args.
 	if (x0 == x1) return;
@@ -556,15 +556,15 @@ void draw_textured_scanline(render_target_t* rt, int x0, int x1, int y, float z0
 	int start_x = x0 + row_offset;
 	int end_x = x1 + row_offset;
 
-	v3_t c_step = v3_mul_f(v3_sub_v3(c1, c0), inv_dx);
-	v3_t c = c0;
+	V3 c_step = v3_mul_f(v3_sub_v3(c1, c0), inv_dx);
+	V3 c = c0;
 
 	v3_mul_eq_f(&c_step, 255);
 	v3_mul_eq_f(&c, 255);
 
-	v2_t uv = uv0;
+	V2 uv = uv0;
 
-	v2_t uv_step = 
+	V2 uv_step = 
 	{
 		(uv1.x - uv0.x) * inv_dx,
 		(uv1.y - uv0.y) * inv_dx
@@ -598,7 +598,7 @@ void draw_textured_scanline(render_target_t* rt, int x0, int x1, int y, float z0
 			int cols = (int)((uv.x * w));
 			int rows = (int)((uv.y * w));
 
-			int n = (rows * texture_width + cols) * 3; // texture_t is split into float r,g,b components.
+			int n = (rows * texture_width + cols) * 3; // Texture is split into float r,g,b components.
 			
 			float r = texture_data[n] * c.x * w;
 			float g = texture_data[n + 1] * c.y * w;
@@ -633,7 +633,7 @@ void draw_textured_scanline(render_target_t* rt, int x0, int x1, int y, float z0
 	}
 }
 
-void draw_textured_flat_bottom_triangle(render_target_t* rt, float* vc0, float* vc1, float* vc2, const texture_t* texture)
+void draw_textured_flat_bottom_triangle(RenderTarget* rt, float* vc0, float* vc1, float* vc2, const Texture* texture)
 {
     // Sort the flat vertices left to right.
     if (vc1[0] > vc2[0])
@@ -641,17 +641,17 @@ void draw_textured_flat_bottom_triangle(render_target_t* rt, float* vc0, float* 
         SWAP(float*, vc1, vc2);
     }
 
-    const v4_t v0 = v4_read(vc0);
-    const v4_t v1 = v4_read(vc1);
-    const v4_t v2 = v4_read(vc2);
+    const V4 v0 = v4_read(vc0);
+    const V4 v1 = v4_read(vc1);
+    const V4 v2 = v4_read(vc2);
 
-    const v3_t c0 = v3_read(vc0 + 4);
-    const v3_t c1 = v3_read(vc1 + 4);
-    const v3_t c2 = v3_read(vc2 + 4);
+    const V3 c0 = v3_read(vc0 + 4);
+    const V3 c1 = v3_read(vc1 + 4);
+    const V3 c2 = v3_read(vc2 + 4);
 
-    const v2_t uv0 = v2_read(vc0 + 7);
-    const v2_t uv1 = v2_read(vc1 + 7);
-    const v2_t uv2 = v2_read(vc2 + 7);
+    const V2 uv0 = v2_read(vc0 + 7);
+    const V2 uv1 = v2_read(vc1 + 7);
+    const V2 uv2 = v2_read(vc2 + 7);
 
     float inv_dy = 1 / (v2.y - v0.y);
 
@@ -667,11 +667,11 @@ void draw_textured_flat_bottom_triangle(render_target_t* rt, float* vc0, float* 
     int start_y = (int)(ceil(v0.y - 0.5f));
     int end_y = (int)(ceil(v2.y - 0.5f));
 
-    v3_t dcdy0 = v3_mul_f(v3_sub_v3(c1, c0), inv_dy);
-    v3_t dcdy1 = v3_mul_f(v3_sub_v3(c2, c0), inv_dy);
+    V3 dcdy0 = v3_mul_f(v3_sub_v3(c1, c0), inv_dy);
+    V3 dcdy1 = v3_mul_f(v3_sub_v3(c2, c0), inv_dy);
 
-    v2_t duvdy0 = v2_mul_f(v2_sub_v2(uv1, uv0), inv_dy);
-    v2_t duvdy1 = v2_mul_f(v2_sub_v2(uv2, uv0), inv_dy);
+    V2 duvdy0 = v2_mul_f(v2_sub_v2(uv1, uv0), inv_dy);
+    V2 duvdy1 = v2_mul_f(v2_sub_v2(uv2, uv0), inv_dy);
 
     for (int y = start_y; y < end_y; ++y) {
         // Must lerp for the vertex attributes otherwise the accuracy is poor.
@@ -691,17 +691,17 @@ void draw_textured_flat_bottom_triangle(render_target_t* rt, float* vc0, float* 
         int start_x = (int)((x0 - 0.5f));
         int end_x = (int)((x1 - 0.5f));
 
-        v3_t start_colour = v3_add_v3(c0, v3_mul_f(dcdy0, a));
-        v3_t end_colour = v3_add_v3(c0, v3_mul_f(dcdy1, a));
+        V3 start_colour = v3_add_v3(c0, v3_mul_f(dcdy0, a));
+        V3 end_colour = v3_add_v3(c0, v3_mul_f(dcdy1, a));
 
-        v2_t start_uv = v2_add_v2(uv0, v2_mul_f(duvdy0, a));
-        v2_t end_uv = v2_add_v2(uv0, v2_mul_f(duvdy1, a));
+        V2 start_uv = v2_add_v2(uv0, v2_mul_f(duvdy0, a));
+        V2 end_uv = v2_add_v2(uv0, v2_mul_f(duvdy1, a));
 
         draw_textured_scanline(rt, start_x, end_x, y, z0, z1, start_w, end_w, start_colour, end_colour, start_uv, end_uv, texture);
     }
 }
 
-void draw_textured_flat_top_triangle(render_target_t* rt, float* vc0, float* vc1, float* vc2, const texture_t* texture)
+void draw_textured_flat_top_triangle(RenderTarget* rt, float* vc0, float* vc1, float* vc2, const Texture* texture)
 {
     // Sort the flat vertices left to right.
     if (vc0[0] > vc1[0])
@@ -709,17 +709,17 @@ void draw_textured_flat_top_triangle(render_target_t* rt, float* vc0, float* vc1
         SWAP(float*, vc0, vc1);
     }
 
-    v4_t v0 = v4_read(vc0);
-    v4_t v1 = v4_read(vc1);
-    v4_t v2 = v4_read(vc2);
+    V4 v0 = v4_read(vc0);
+    V4 v1 = v4_read(vc1);
+    V4 v2 = v4_read(vc2);
 
-    const v3_t c0 = v3_read(vc0 + 4);
-    const v3_t c1 = v3_read(vc1 + 4);
-    const v3_t c2 = v3_read(vc2 + 4);
+    const V3 c0 = v3_read(vc0 + 4);
+    const V3 c1 = v3_read(vc1 + 4);
+    const V3 c2 = v3_read(vc2 + 4);
 
-    const v2_t uv0 = v2_read(vc0 + 7);
-    const v2_t uv1 = v2_read(vc1 + 7);
-    const v2_t uv2 = v2_read(vc2 + 7);
+    const V2 uv0 = v2_read(vc0 + 7);
+    const V2 uv1 = v2_read(vc1 + 7);
+    const V2 uv2 = v2_read(vc2 + 7);
 
     float inv_dy = 1 / (v2.y - v0.y);
 
@@ -735,11 +735,11 @@ void draw_textured_flat_top_triangle(render_target_t* rt, float* vc0, float* vc1
     int start_y = (int)(ceil(v0.y - 0.5f));
     int end_y = (int)(ceil(v2.y - 0.5f));
 
-    v3_t dcdy0 = v3_mul_f(v3_sub_v3(c2, c0), inv_dy);
-    v3_t dcdy1 = v3_mul_f(v3_sub_v3(c2, c1), inv_dy);
+    V3 dcdy0 = v3_mul_f(v3_sub_v3(c2, c0), inv_dy);
+    V3 dcdy1 = v3_mul_f(v3_sub_v3(c2, c1), inv_dy);
 
-    v2_t duvdy0 = v2_mul_f(v2_sub_v2(uv2, uv0), inv_dy);
-    v2_t duvdy1 = v2_mul_f(v2_sub_v2(uv2, uv1), inv_dy);
+    V2 duvdy0 = v2_mul_f(v2_sub_v2(uv2, uv0), inv_dy);
+    V2 duvdy1 = v2_mul_f(v2_sub_v2(uv2, uv1), inv_dy);
 
     for (int y = start_y; y < end_y; ++y) {
         // Must lerp for the vertex attributes to get them accurately.
@@ -762,17 +762,17 @@ void draw_textured_flat_top_triangle(render_target_t* rt, float* vc0, float* vc1
         int start_x = (int)((x0 - 0.5f));
         int end_x = (int)((x1 - 0.5f));
 
-        v3_t start_colour = v3_add_v3(c0, v3_mul_f(dcdy0, a));
-        v3_t end_colour = v3_add_v3(c1, v3_mul_f(dcdy1, a));
+        V3 start_colour = v3_add_v3(c0, v3_mul_f(dcdy0, a));
+        V3 end_colour = v3_add_v3(c1, v3_mul_f(dcdy1, a));
 
-        v2_t start_uv = v2_add_v2(uv0, v2_mul_f(duvdy0, a));
-        v2_t end_uv = v2_add_v2(uv1, v2_mul_f(duvdy1, a));
+        V2 start_uv = v2_add_v2(uv0, v2_mul_f(duvdy0, a));
+        V2 end_uv = v2_add_v2(uv1, v2_mul_f(duvdy1, a));
 
         draw_textured_scanline(rt, start_x, end_x, y, z0, z1, start_w, end_w, start_colour, end_colour, start_uv, end_uv, texture);
     }
 }
 
-void draw_textured_triangle(render_target_t* rt, float* vc0, float* vc1, float* vc2, const texture_t* texture)
+void draw_textured_triangle(RenderTarget* rt, float* vc0, float* vc1, float* vc2, const Texture* texture)
 {
     // TODO: why is it called vc0 (vertex copmonents) not just vertex.
 
@@ -840,7 +840,7 @@ void draw_textured_triangle(render_target_t* rt, float* vc0, float* vc1, float* 
     draw_textured_flat_bottom_triangle(rt, vc0, vc1, vc3, texture);
 }
 
-void draw_depth_scanline(depth_buffer_t* db, int x0, int x1, int y, float z0, float z1)
+void draw_depth_scanline(DepthBuffer* db, int x0, int x1, int y, float z0, float z1)
 {
 	// TODO: TEMP: Whilst no clipping.
 	if (y < 0) return;
@@ -891,12 +891,12 @@ void draw_depth_scanline(depth_buffer_t* db, int x0, int x1, int y, float z0, fl
 	}
 }
 
-void draw_depth_flat_bottom_triangle(depth_buffer_t* db, v4_t v0, v4_t v1, v4_t v2)
+void draw_depth_flat_bottom_triangle(DepthBuffer* db, V4 v0, V4 v1, V4 v2)
 {
 	// Sort the flat vertices left to right.
 	if (v1.x > v2.x)
 	{
-        SWAP(v4_t, v1, v2);
+        SWAP(V4, v1, v2);
 	}
 
 	float inv_dy = 1 / (v2.y - v0.y);
@@ -936,12 +936,12 @@ void draw_depth_flat_bottom_triangle(depth_buffer_t* db, v4_t v0, v4_t v1, v4_t 
 	}
 }
 
-void draw_depth_flat_top_triangle(depth_buffer_t* db, v4_t v0, v4_t v1, v4_t v2)
+void draw_depth_flat_top_triangle(DepthBuffer* db, V4 v0, V4 v1, V4 v2)
 {
 	// Sort the flat vertices left to right.
 	if (v0.x > v1.x)
 	{
-        SWAP(v4_t, v0, v1);
+        SWAP(V4, v0, v1);
 	}
 
 	float inv_dy = 1 / (v2.y - v0.y);
@@ -978,22 +978,22 @@ void draw_depth_flat_top_triangle(depth_buffer_t* db, v4_t v0, v4_t v1, v4_t v2)
 	}
 }
 
-void draw_depth_triangle(depth_buffer_t* db, v4_t v0, v4_t v1, v4_t v2)
+void draw_depth_triangle(DepthBuffer* db, V4 v0, V4 v1, V4 v2)
 {
-	// TODO: I don't think we need w, so should make these v3_t.
+	// TODO: I don't think we need w, so should make these V3.
 
 	// Sort vertices in ascending order.
 	if (v0.y > v1.y)
 	{
-        SWAP(v4_t, v0, v1);
+        SWAP(V4, v0, v1);
 	}
 	if (v0.y > v2.y)
 	{
-        SWAP(v4_t, v0, v2);
+        SWAP(V4, v0, v2);
 	}
 	if (v1.y > v2.y)
 	{
-        SWAP(v4_t, v1, v2);
+        SWAP(V4, v1, v2);
 	}
 
 	// Handle if the triangle is already flat.
@@ -1014,7 +1014,7 @@ void draw_depth_triangle(depth_buffer_t* db, v4_t v0, v4_t v1, v4_t v2)
 	// Linear interpolate for v3.
 	float t = (v1.y - v0.y) / (v2.y - v0.y);
 
-	v4_t v3 = {
+	V4 v3 = {
 		v0.x + (v2.x - v0.x) * t,
 		v1.y,
 		v0.z + (v2.z - v0.z) * t,
@@ -1025,12 +1025,12 @@ void draw_depth_triangle(depth_buffer_t* db, v4_t v0, v4_t v1, v4_t v2)
 	draw_depth_flat_bottom_triangle(db, v0, v1, v3);
 }
 
-float calculate_diffuse_factor(const v3_t v, const v3_t n, const v3_t light_pos, float a, float b)
+float calculate_diffuse_factor(const V3 v, const V3 n, const V3 light_pos, float a, float b)
 {
 	// TODO: Comments, check maths etc.
 
 	// calculate the direction of the light to the vertex
-	v3_t light_dir = v3_sub_v3(light_pos, v);
+	V3 light_dir = v3_sub_v3(light_pos, v);
 
 
 	float light_distance = v3_size(light_dir);
@@ -1050,7 +1050,7 @@ float calculate_diffuse_factor(const v3_t v, const v3_t n, const v3_t light_pos,
 	return dp;
 }
 
-void project(const canvas_t* canvas, const m4_t projection_matrix, v4_t v, v4_t* out)
+void project(const Canvas* canvas, const M4 projection_matrix, V4 v, V4* out)
 {
 	// TODO: Rename view space to screen space?
 
@@ -1061,7 +1061,7 @@ void project(const canvas_t* canvas, const m4_t projection_matrix, v4_t v, v4_t*
 
 	// Apply the perspective projection matrix to project
 	// the 3D coordinates into 2D.
-	v4_t v_projected;
+	V4 v_projected;
 	m4_mul_v4(projection_matrix, v, &v_projected);
 
 	// Perform perspective divide to bring to NDC space.
@@ -1090,13 +1090,13 @@ void project(const canvas_t* canvas, const m4_t projection_matrix, v4_t v, v4_t*
 	out->w = inv_w;
 }
 
-void model_to_view_space(cecs* ecs, cecs_view_id render_view, frame_data_t* frame_data, scene_t* scene, const m4_t view_matrix)
+void model_to_view_space(cecs* ecs, cecs_view_id render_view, FrameData* frame_data, Scene* scene, const M4 view_matrix)
 {
     // TODO: Could split this into multiple functions.
 
     // TODO: Should this function really be defined as transform stage as 
     //		 we also do the bounding sphere stuff.....
-    const mesh_base_t* mbs = scene->mesh_bases.bases;
+    const MeshBase* mbs = scene->mesh_bases.bases;
 
     int vsps_offset = 0;
     int vsns_offset = 0;
@@ -1104,15 +1104,15 @@ void model_to_view_space(cecs* ecs, cecs_view_id render_view, frame_data_t* fram
     cecs_view_iter it = cecs_view_iter_create(ecs, render_view);
     while (cecs_view_iter_next(&it))
     {
-        mesh_instance_t* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
-        const transform_t* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
+        MeshInstance* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
+        const Transform* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
 
-        v3_t* vsps = frame_data->view_space_positions;
+        V3* vsps = frame_data->view_space_positions;
 
         for (int i = 0; i < it.num_entities; ++i)
         {            
-            mesh_instance_t* mi = &mis[i];
-            transform_t transform = transforms[i];
+            MeshInstance* mi = &mis[i];
+            Transform transform = transforms[i];
 
             // Save the offset to the start of the view space positions for the 
             // mesh instance.
@@ -1120,7 +1120,7 @@ void model_to_view_space(cecs* ecs, cecs_view_id render_view, frame_data_t* fram
 
             // Calculate model matrix.
             // TODO: rotation or direction or eulers?
-            m4_t model_matrix;
+            M4 model_matrix;
             //m4_model_matrix(transform.position, transform.rotation, transform.scale, model_matrix);
 
             m4_model_matrix(
@@ -1130,20 +1130,20 @@ void model_to_view_space(cecs* ecs, cecs_view_id render_view, frame_data_t* fram
                 transform.scale, 
                 model_matrix);
 
-            m4_t model_view_matrix;
+            M4 model_view_matrix;
             m4_mul_m4(view_matrix, model_matrix, model_view_matrix);
 
-            const mesh_base_t* mb = &mbs[mi->mb_id];
+            const MeshBase* mb = &mbs[mi->mb_id];
 
             // Update the centre of the bounding sphere.
-            v4_t view_space_centre;
+            V4 view_space_centre;
             m4_mul_v4(
                 model_view_matrix,
                 v3_to_v4(mb->centre, 1.f),
                 &view_space_centre);
 
             // Write out the bounding sphere.
-            bounding_sphere_t* bs = &mi->view_space_bounding_sphere;
+            BoundingSphere* bs = &mi->view_space_bounding_sphere;
             bs->centre = v4_xyz(view_space_centre);
 
             // Read the mesh base's object space positions and convert them to 
@@ -1151,8 +1151,8 @@ void model_to_view_space(cecs* ecs, cecs_view_id render_view, frame_data_t* fram
 
             for (int j = 0; j < mb->num_positions; ++j)
             {
-                const v4_t osp = v3_to_v4(mb->object_space_positions[j], 1.f);
-                v4_t vsp;
+                const V4 osp = v3_to_v4(mb->object_space_positions[j], 1.f);
+                V4 vsp;
                 m4_mul_v4(model_view_matrix, osp, &vsp);
 
                 vsps[vsps_offset].x = vsp.x;
@@ -1164,12 +1164,12 @@ void model_to_view_space(cecs* ecs, cecs_view_id render_view, frame_data_t* fram
         }
 
         // Convert object space normals to view space.
-        v3_t* vsns = frame_data->view_space_normals;
+        V3* vsns = frame_data->view_space_normals;
 
         for (int i = 0; i < it.num_entities; ++i)
         {
-            mesh_instance_t* mi = &mis[i];
-            transform_t transform = transforms[i];
+            MeshInstance* mi = &mis[i];
+            Transform transform = transforms[i];
 
             // Save the offset to the start of the view space positions for the 
             // mesh instance.
@@ -1177,7 +1177,7 @@ void model_to_view_space(cecs* ecs, cecs_view_id render_view, frame_data_t* fram
 
             // Calculate normal matrix.
             // TODO: rotation or direction or eulers?
-            m4_t normal_matrix;
+            M4 normal_matrix;
             //m4_normal_matrix(transform.rotation, transform.scale, normal_matrix);
             m4_normal_matrix(
                 v3_lerp(transform.previous_rotation, transform.rotation, frame_data->physics_alpha),
@@ -1185,19 +1185,19 @@ void model_to_view_space(cecs* ecs, cecs_view_id render_view, frame_data_t* fram
                 transform.scale,
                 normal_matrix);
 
-            m4_t view_normal_matrix;
+            M4 view_normal_matrix;
             m4_mul_m4(view_matrix, normal_matrix, view_normal_matrix);
 
-            const mesh_base_t* mb = &mbs[mi->mb_id];
+            const MeshBase* mb = &mbs[mi->mb_id];
 
             for (int j = 0; j < mb->num_normals; ++j)
             {
-                const v4_t osn = v3_to_v4(mb->object_space_normals[j], 0.f);
+                const V4 osn = v3_to_v4(mb->object_space_normals[j], 0.f);
 
-                v4_t vsn;
+                V4 vsn;
                 m4_mul_v4(view_normal_matrix, osn, &vsn);
 
-                v3_t normal = v3_normalised(v4_xyz(vsn));
+                V3 normal = v3_normalised(v4_xyz(vsn));
 
                 vsns[vsns_offset].x = normal.x;
                 vsns[vsns_offset].y = normal.y;
@@ -1209,22 +1209,22 @@ void model_to_view_space(cecs* ecs, cecs_view_id render_view, frame_data_t* fram
 
         for (int i = 0; i < it.num_entities; ++i)
         {
-            mesh_instance_t* mi = &mis[i];
+            MeshInstance* mi = &mis[i];
 
             // Update the radius of each mesh instance bounding sphere.
-            const v3_t* vsps = frame_data->view_space_positions;
+            const V3* vsps = frame_data->view_space_positions;
 
             // Only update the bounding sphere if the scale is changed, otherwise
             // we don't need to update it. Note, we've already updated the centre
             // in the vsps calculation step!
             if (mi->has_scale_changed)
             {
-                bounding_sphere_t* bs = &mi->view_space_bounding_sphere;
-                v3_t view_space_centre = bs->centre;
+                BoundingSphere* bs = &mi->view_space_bounding_sphere;
+                V3 view_space_centre = bs->centre;
 
                 mi->has_scale_changed = 0;
 
-                const mesh_base_t* mb = &mbs[mi->mb_id];
+                const MeshBase* mb = &mbs[mi->mb_id];
 
                 // Calculate the new radius of the mi's bounding sphere.
                 float radius_squared = -1;
@@ -1232,8 +1232,8 @@ void model_to_view_space(cecs* ecs, cecs_view_id render_view, frame_data_t* fram
                 const int end = mi->view_space_positions_offset + mb->num_positions;
                 for (int j = mi->view_space_positions_offset; j < end; ++j)
                 {
-                    v3_t v = vsps[j];
-                    v3_t between = v3_sub_v3(v, view_space_centre);
+                    V3 v = vsps[j];
+                    V3 between = v3_sub_v3(v, view_space_centre);
 
                     radius_squared = max(v3_size_sqrd(between), radius_squared);
                 }
@@ -1245,25 +1245,25 @@ void model_to_view_space(cecs* ecs, cecs_view_id render_view, frame_data_t* fram
     }	
 }
 
-void lights_world_to_view_space(cecs* ecs, cecs_view_id lighting_view, frame_data_t* frame_data, const scene_t* scene, const m4_t view_matrix)
+void lights_world_to_view_space(cecs* ecs, cecs_view_id lighting_view, FrameData* frame_data, const Scene* scene, const M4 view_matrix)
 {
 	// This could be made more efficient by having an array of input world
 	// space positions, however, we will never be able to support enough lights
 	// to make this worthwhile (i think).
 
 
-	v3_t* view_space_positions = frame_data->point_lights_view_space_positions;
+	V3* view_space_positions = frame_data->point_lights_view_space_positions;
 
     int vsps_offset = 0;
 
     cecs_view_iter it = cecs_view_iter_create(ecs, lighting_view);
     while (cecs_view_iter_next(&it))
     {
-        point_light_t* pls = cecs_get_column(it, COMPONENT_POINT_LIGHT);
+        PointLight* pls = cecs_get_column(it, COMPONENT_POINT_LIGHT);
 
         for (int i = 0; i < it.num_entities; ++i)
         {
-            v4_t v_view_space;
+            V4 v_view_space;
             m4_mul_v4(view_matrix, v3_to_v4(pls[i].position, 1.f),
                 &v_view_space);
 
@@ -1278,28 +1278,28 @@ void lights_world_to_view_space(cecs* ecs, cecs_view_id lighting_view, frame_dat
     }
 }
 
-void broad_phase_frustum_culling(cecs* ecs, cecs_view_id render_view, frame_data_t* frame_data, scene_t* scene, const view_frustum_t* view_frustum)
+void broad_phase_frustum_culling(cecs* ecs, cecs_view_id render_view, FrameData* frame_data, Scene* scene, const ViewFrustum* view_frustum)
 {
 	// Performs broad phase frustum culling on the models, writes out the planes
 	// that need to be clipped against.
 	
-    mesh_instance_t* visible_mis = frame_data->visible_mis;
+    MeshInstance* visible_mis = frame_data->visible_mis;
 	int visible_mis_count = 0;
 	uint8_t* intersected_planes = frame_data->intersected_planes;
 	int intersected_planes_out_index = 0;
 
 	const int num_planes = view_frustum->planes_count;
-	const plane_t* planes = view_frustum->planes;
+	const Plane* planes = view_frustum->planes;
 
     cecs_view_iter it = cecs_view_iter_create(ecs, render_view);
     while (cecs_view_iter_next(&it))
     {
-        mesh_instance_t* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
+        MeshInstance* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
     
         for (int i = 0; i < it.num_entities; ++i)
         {
-            mesh_instance_t* mi = &mis[i];
-            const bounding_sphere_t bs = mi->view_space_bounding_sphere;
+            MeshInstance* mi = &mis[i];
+            const BoundingSphere bs = mi->view_space_bounding_sphere;
 
             // Store what planes need clipping against.
             int clip_against_plane[MAX_FRUSTUM_PLANES] = { 0 };
@@ -1345,13 +1345,13 @@ void broad_phase_frustum_culling(cecs* ecs, cecs_view_id render_view, frame_data
 	frame_data->num_visible_mis = visible_mis_count;
 }
 
-void cull_backfaces(cecs* ecs, cecs_view_id render_view, frame_data_t* frame_data, scene_t* scene)
+void cull_backfaces(cecs* ecs, cecs_view_id render_view, FrameData* frame_data, Scene* scene)
 {
-	const mesh_base_t* mbs = scene->mesh_bases.bases;
+	const MeshBase* mbs = scene->mesh_bases.bases;
 
 	// Determines what faces are facing the camera and prepares
 	// the vertex data for the lighting calculations.
-	mesh_instance_t* visible_mis = frame_data->visible_mis;
+	MeshInstance* visible_mis = frame_data->visible_mis;
 	const int num_visible_mis = frame_data->num_visible_mis;
 
 	int* front_face_indices = frame_data->front_face_indices;
@@ -1361,11 +1361,11 @@ void cull_backfaces(cecs* ecs, cecs_view_id render_view, frame_data_t* frame_dat
 	{
 		int front_faces = 0;
 
-		mesh_instance_t* mi = &visible_mis[i];
-		const mesh_base_t* mb = &mbs[mi->mb_id];
+		MeshInstance* mi = &visible_mis[i];
+		const MeshBase* mb = &mbs[mi->mb_id];
 
 		const int* position_indices = mb->position_indices;
-	    const v3_t* vsps = frame_data->view_space_positions + mi->view_space_positions_offset;
+	    const V3* vsps = frame_data->view_space_positions + mi->view_space_positions_offset;
 
 		for (int j = 0; j < mb->num_faces; ++j)
 		{
@@ -1401,9 +1401,9 @@ void light_front_faces(
     cecs* ecs, 
     cecs_view_id render_view, 
     cecs_view_id lighting_view, 
-    frame_data_t* frame_data, 
-    scene_t* scene, 
-    const v3_t ambient)
+    FrameData* frame_data, 
+    Scene* scene, 
+    const V3 ambient)
 {
 	/*
 	
@@ -1449,31 +1449,31 @@ void light_front_faces(
 	// Input
 	//const Lights* lights = &scene->lights;
     //const ComponentList* point_lights_list = &scene->lights.point_lights;
-    //const point_light_t* point_lights = (point_light_t*)point_lights_list->elements;
-	const mesh_base_t* mbs = scene->mesh_bases.bases;
+    //const PointLight* point_lights = (PointLight*)point_lights_list->elements;
+	const MeshBase* mbs = scene->mesh_bases.bases;
 
 	const int* front_face_indices = frame_data->front_face_indices;
-	const v3_t* vsps = frame_data->view_space_positions;
-	const v3_t* vsns = frame_data->view_space_normals;
-	const v3_t* point_light_vsps = frame_data->point_lights_view_space_positions;
+	const V3* vsps = frame_data->view_space_positions;
+	const V3* vsns = frame_data->view_space_normals;
+	const V3* point_light_vsps = frame_data->point_lights_view_space_positions;
 
-	const mesh_instance_t* mis = frame_data->visible_mis;
+	const MeshInstance* mis = frame_data->visible_mis;
 	const int num_visible_mis = frame_data->num_visible_mis;
 	
 	// Output
 	int out_index = 0;
 
-    // TODO: float* or v3_t*
-	v3_t* vertex_lighting = frame_data->vertex_lighting;
+    // TODO: float* or V3*
+	V3* vertex_lighting = frame_data->vertex_lighting;
 
 	int front_faces_offset = 0;
 
 	for (int i = 0; i < num_visible_mis; ++i)
 	{
-		const mesh_instance_t* mi = &mis[i];
-		const mesh_base_t* mb = &mbs[mi->mb_id];
+		const MeshInstance* mi = &mis[i];
+		const MeshBase* mb = &mbs[mi->mb_id];
 
-		const v3_t* vertex_albedos = mi->vertex_alebdos;
+		const V3* vertex_albedos = mi->vertex_alebdos;
 
 		const int vsp_offset = mi->view_space_positions_offset;
 		const int vsn_offset = mi->view_space_normals_offset;
@@ -1484,14 +1484,14 @@ void light_front_faces(
 
 			for (int vi = 0; vi < STRIDE_FACE_VERTICES; ++vi)
 			{
-				const v3_t point = vsps[vsp_offset + mb->position_indices[face_index + vi]];
-				const v3_t normal = vsns[vsn_offset + mb->normal_indices[face_index + vi]];
+				const V3 point = vsps[vsp_offset + mb->position_indices[face_index + vi]];
+				const V3 normal = vsns[vsn_offset + mb->normal_indices[face_index + vi]];
 
                 // Albedos are stored per vertex. 
                 // TODO: How do these line up when we cull faces????? They dont..... do they? could cause issues when setting albedo for specific vertices....
 
-                const v3_t albedo = vertex_albedos[j * STRIDE_FACE_VERTICES + vi];
-				v3_t diffuse = { 0 };
+                const V3 albedo = vertex_albedos[j * STRIDE_FACE_VERTICES + vi];
+				V3 diffuse = { 0 };
                 
                 int pl_vsps_offset = 0;
 
@@ -1500,21 +1500,21 @@ void light_front_faces(
                 cecs_view_iter it = cecs_view_iter_create(ecs, lighting_view);
                 while (cecs_view_iter_next(&it))
                 {
-                    point_light_t* pls = cecs_get_column(it, COMPONENT_POINT_LIGHT);
+                    PointLight* pls = cecs_get_column(it, COMPONENT_POINT_LIGHT);
 
                     for (int i = 0; i < it.num_entities; ++i)
                     {
-                        const v3_t pl_vsp = point_light_vsps[pl_vsps_offset];
+                        const V3 pl_vsp = point_light_vsps[pl_vsps_offset];
                         ++pl_vsps_offset;
 
-                        const point_light_t* pl = &pls[i];
+                        const PointLight* pl = &pls[i];
 
                         const float a = 0.1f / pl->strength;
                         const float b = 0.01f / pl->strength;
 
                         const float df = calculate_diffuse_factor(point, normal, pl_vsp, a, b);
 
-                        const v3_t colour = v3_mul_f(pl->colour, df);
+                        const V3 colour = v3_mul_f(pl->colour, df);
 
                         v3_add_eq_v3(&diffuse, colour);
                     }
@@ -1524,16 +1524,16 @@ void light_front_faces(
                 /*
 				for (int pl_index = 0; pl_index < point_lights_list->count; ++pl_index)
 				{
-					const point_light_t* pl = &point_lights[pl_index];
+					const PointLight* pl = &point_lights[pl_index];
 
-					const v3_t pl_vsp = v3_read(point_light_vsps + pl_index * STRIDE_POSITION);
+					const V3 pl_vsp = v3_read(point_light_vsps + pl_index * STRIDE_POSITION);
 
 					const float a = 0.1f / pl->strength;
 					const float b = 0.01f / pl->strength;
 
 					const float df = calculate_diffuse_factor(point, normal, pl_vsp, a, b);
                     
-					const v3_t colour = v3_mul_f(pl->colour, df);
+					const V3 colour = v3_mul_f(pl->colour, df);
 
 					v3_add_eq_v3(&diffuse, colour);
 				}*/
@@ -1541,7 +1541,7 @@ void light_front_faces(
 				// TODO: shadow casting lights etc.
 
 				// Clamp diffuse contribution to a valid range 0-1. 
-                v3_t light = v3_mul_v3(albedo, v3_add_v3(diffuse, ambient));
+                V3 light = v3_mul_v3(albedo, v3_add_v3(diffuse, ambient));
 
 
 				// TODO: Do we clamp here? How does it work with shadows..
@@ -1577,19 +1577,19 @@ void light_front_faces(
 	}
 }
 
-void prepare_for_clipping(cecs* ecs, cecs_view_id render_view, frame_data_t* frame_data, scene_t* scene)
+void prepare_for_clipping(cecs* ecs, cecs_view_id render_view, FrameData* frame_data, Scene* scene)
 {
     // TODO: Comments on how the data is packed together.
 
 	// Input
-	const mesh_instance_t* mis = frame_data->visible_mis;
-	const mesh_base_t* mbs = scene->mesh_bases.bases;
+	const MeshInstance* mis = frame_data->visible_mis;
+	const MeshBase* mbs = scene->mesh_bases.bases;
 	
 	const int* front_face_indices = frame_data->front_face_indices;
 
 	const int num_visible_mis = frame_data->num_visible_mis;
 
-	const v3_t* vertex_lighting = frame_data->vertex_lighting;
+	const V3* vertex_lighting = frame_data->vertex_lighting;
     int vertex_lighting_in = 0;
 
 	// Output
@@ -1600,15 +1600,15 @@ void prepare_for_clipping(cecs* ecs, cecs_view_id render_view, frame_data_t* fra
 
 	for (int i = 0; i < num_visible_mis; ++i)
 	{
-		const mesh_instance_t* mi = &mis[i];
-		const mesh_base_t* mb = &mbs[mi->mb_id];
+		const MeshInstance* mi = &mis[i];
+		const MeshBase* mb = &mbs[mi->mb_id];
 
 		const int* position_indices = mb->position_indices;
 		const int vsp_offset = mi->view_space_positions_offset;
-	    const v3_t* vsps = frame_data->view_space_positions + vsp_offset;
+	    const V3* vsps = frame_data->view_space_positions + vsp_offset;
 
 		const int* uv_indices = mb->uv_indices;
-		const v2_t* uvs = mb->uvs;
+		const V2* uvs = mb->uvs;
 
         // Only write out UVs if the mesh is textured.
         if (mi->texture_id != -1)
@@ -1617,19 +1617,19 @@ void prepare_for_clipping(cecs* ecs, cecs_view_id render_view, frame_data_t* fra
             {
                 const int face_index = front_face_indices[j + front_faces_offset] * STRIDE_FACE_VERTICES;
 
-                const v3_t p0 = vsps[position_indices[face_index]];
-                const v3_t p1 = vsps[position_indices[face_index + 1]];
-                const v3_t p2 = vsps[position_indices[face_index + 2]];
+                const V3 p0 = vsps[position_indices[face_index]];
+                const V3 p1 = vsps[position_indices[face_index + 1]];
+                const V3 p2 = vsps[position_indices[face_index + 2]];
 
                 // TODO: Lighting is not the nicest name for this.
-                const v3_t lighting0 = vertex_lighting[vertex_lighting_in];
-                const v3_t lighting1 = vertex_lighting[vertex_lighting_in + 1];
-                const v3_t lighting2 = vertex_lighting[vertex_lighting_in + 2];
+                const V3 lighting0 = vertex_lighting[vertex_lighting_in];
+                const V3 lighting1 = vertex_lighting[vertex_lighting_in + 1];
+                const V3 lighting2 = vertex_lighting[vertex_lighting_in + 2];
                 vertex_lighting_in += STRIDE_FACE_VERTICES;
 
-                const v2_t uv0 = uvs[uv_indices[face_index]];
-                const v2_t uv1 = uvs[uv_indices[face_index + 1]];
-                const v2_t uv2 = uvs[uv_indices[face_index + 2]];
+                const V2 uv0 = uvs[uv_indices[face_index]];
+                const V2 uv1 = uvs[uv_indices[face_index + 1]];
+                const V2 uv2 = uvs[uv_indices[face_index + 2]];
 
                 // Write out the vertices.
 #define WRITE_VERTEX(p, l, uv) \
@@ -1656,14 +1656,14 @@ void prepare_for_clipping(cecs* ecs, cecs_view_id render_view, frame_data_t* fra
             {
                 const int face_index = front_face_indices[j + front_faces_offset] * STRIDE_FACE_VERTICES;
 
-                const v3_t p0 = vsps[position_indices[face_index]];
-                const v3_t p1 = vsps[position_indices[face_index + 1]];
-                const v3_t p2 = vsps[position_indices[face_index + 2]];
+                const V3 p0 = vsps[position_indices[face_index]];
+                const V3 p1 = vsps[position_indices[face_index + 1]];
+                const V3 p2 = vsps[position_indices[face_index + 2]];
 
                 // TODO: Lighting is not the nicest name for this.
-                const v3_t lighting0 = vertex_lighting[vertex_lighting_in];
-                const v3_t lighting1 = vertex_lighting[vertex_lighting_in + 1];
-                const v3_t lighting2 = vertex_lighting[vertex_lighting_in + 2];
+                const V3 lighting0 = vertex_lighting[vertex_lighting_in];
+                const V3 lighting1 = vertex_lighting[vertex_lighting_in + 1];
+                const V3 lighting2 = vertex_lighting[vertex_lighting_in + 2];
                 vertex_lighting_in += STRIDE_FACE_VERTICES;
 
                 // Write out the vertices.
@@ -1691,15 +1691,15 @@ void prepare_for_clipping(cecs* ecs, cecs_view_id render_view, frame_data_t* fra
 
 void clip_project_and_draw(
     cecs_view_id render_view,
-	renderer_t* renderer,
-	render_target_t* rt,
-	frame_data_t* frame_data,
-	scene_t* scene,
-    const resources_t* resources)
+	Renderer* renderer,
+	RenderTarget* rt,
+	FrameData* frame_data,
+	Scene* scene,
+    const Resources* resources)
 {
 	// Input
-	const mesh_instance_t* mis = frame_data->visible_mis;
-	const mesh_base_t* mbs = scene->mesh_bases.bases;
+	const MeshInstance* mis = frame_data->visible_mis;
+	const MeshBase* mbs = scene->mesh_bases.bases;
 
 	const int num_visible_mis = frame_data->num_visible_mis;
 
@@ -1715,8 +1715,8 @@ void clip_project_and_draw(
 
 	for (int i = 0; i < num_visible_mis; ++i)
 	{
-		const mesh_instance_t* mi = &mis[i];
-		const mesh_base_t* mb = &mbs[mi->mb_id];
+		const MeshInstance* mi = &mis[i];
+		const MeshBase* mb = &mbs[mi->mb_id];
 
 		const uint8_t num_planes_to_clip_against = intersected_planes[intersected_planes_index++];
         
@@ -1765,7 +1765,7 @@ void clip_project_and_draw(
 
 			for (int j = 0; j < num_planes_to_clip_against; ++j)
 			{
-				const plane_t* plane = &renderer->settings.view_frustum.planes[intersected_planes[intersected_planes_index++]];
+				const Plane* plane = &renderer->settings.view_frustum.planes[intersected_planes[intersected_planes_index++]];
 				
 				// Reset the index to write out to.
 				index_out = 0;
@@ -1859,16 +1859,16 @@ void clip_project_and_draw(
                         const float* ov0 = temp_clipped_faces_in + index_ov0;
                         const float* ov1 = temp_clipped_faces_in + index_ov1;
 
-						const v3_t ip0 = v3_read(iv0);
-						const v3_t op0 = v3_read(ov0);
-						const v3_t op1 = v3_read(ov1);
+						const V3 ip0 = v3_read(iv0);
+						const V3 op0 = v3_read(ov0);
+						const V3 op1 = v3_read(ov1);
 
 						// Copy the inside vertex.
 						memcpy(temp_clipped_faces_out + index_out, iv0, VERTEX_COMPONENTS * sizeof(float));
 						index_out += VERTEX_COMPONENTS;
 
 						// Lerp for the first new vertex.
-						v3_t p0;
+						V3 p0;
 						float t = line_intersect_plane(ip0, op0, plane, &p0);
 
 						temp_clipped_faces_out[index_out++] = p0.x;
@@ -1884,7 +1884,7 @@ void clip_project_and_draw(
 						}
 
 						// Lerp for the second vertex.
-						v3_t p1;
+						V3 p1;
 						t = line_intersect_plane(ip0, op1, plane, &p1);
 
 						temp_clipped_faces_out[index_out++] = p1.x;
@@ -1911,9 +1911,9 @@ void clip_project_and_draw(
                         const float* iv1 = temp_clipped_faces_in + index_iv1;
                         const float* ov0 = temp_clipped_faces_in + index_ov0;
 
-						const v3_t ip0 = v3_read(iv0);
-						const v3_t ip1 = v3_read(iv1);
-						const v3_t op0 = v3_read(ov0);
+						const V3 ip0 = v3_read(iv0);
+						const V3 ip1 = v3_read(iv1);
+						const V3 op0 = v3_read(ov0);
 
 						// Copy the first inside vertex.
 						memcpy(temp_clipped_faces_out + index_out, iv0, VERTEX_COMPONENTS * sizeof(float));
@@ -1924,7 +1924,7 @@ void clip_project_and_draw(
 						index_out += VERTEX_COMPONENTS;
 
 						// Lerp for the first new vertex.
-						v3_t p0;
+						V3 p0;
 						float t = line_intersect_plane(ip0, op0, plane, &p0);
 
                         // We will reuse this vertex for the second triangle, so copy it's index.
@@ -1952,7 +1952,7 @@ void clip_project_and_draw(
 						}
 
 						// Lerp for the second new point.
-						v3_t p1;
+						V3 p1;
 						t = line_intersect_plane(ip1, op0, plane, &p1);
 						
 						temp_clipped_faces_out[index_out++] = p1.x;
@@ -2005,10 +2005,10 @@ void clip_project_and_draw(
 }
 
 void project_and_draw_clipped(
-	renderer_t* renderer,
-	render_target_t* rt,
-	frame_data_t* frame_data,
-	const mesh_instance_t* mi
+	Renderer* renderer,
+	RenderTarget* rt,
+	FrameData* frame_data,
+	const MeshInstance* mi
 	)
 {
     // TODO: I would at least like to project everything at once if we're going to do it like this right??
@@ -2035,11 +2035,11 @@ void project_and_draw_clipped(
 		const float* v1 = face + INPUT_VERTEX_COMPONENTS;
 		const float* v2 = face + INPUT_VERTEX_COMPONENTS * 2;
 
-		const v4_t p0 = v3_read_to_v4(v0, 1.f);
-		const v4_t p1 = v3_read_to_v4(v1, 1.f);
-		const v4_t p2 = v3_read_to_v4(v2, 1.f);
+		const V4 p0 = v3_read_to_v4(v0, 1.f);
+		const V4 p1 = v3_read_to_v4(v1, 1.f);
+		const V4 p2 = v3_read_to_v4(v2, 1.f);
 
-		v4_t ssp0, ssp1, ssp2;
+		V4 ssp0, ssp1, ssp2;
 		project(&rt->canvas, renderer->settings.projection_matrix, p0, &ssp0);
 		project(&rt->canvas, renderer->settings.projection_matrix, p1, &ssp1);
 		project(&rt->canvas, renderer->settings.projection_matrix, p2, &ssp2);
@@ -2073,11 +2073,11 @@ void project_and_draw_clipped(
 }
 
 void project_and_draw_clipped_textured(
-    renderer_t* renderer,
-    render_target_t* rt,
-    frame_data_t* frame_data,
-    const mesh_instance_t* mi,
-    const texture_t* texture
+    Renderer* renderer,
+    RenderTarget* rt,
+    FrameData* frame_data,
+    const MeshInstance* mi,
+    const Texture* texture
 )
 {
     // TODO: Almost identical to project_and_draw_clipped..... maybe not worth
@@ -2106,11 +2106,11 @@ void project_and_draw_clipped_textured(
         const float* v1 = face + INPUT_VERTEX_COMPONENTS;
         const float* v2 = face + INPUT_VERTEX_COMPONENTS * 2;
 
-        const v4_t p0 = v3_read_to_v4(v0, 1.f);
-        const v4_t p1 = v3_read_to_v4(v1, 1.f);
-        const v4_t p2 = v3_read_to_v4(v2, 1.f);
+        const V4 p0 = v3_read_to_v4(v0, 1.f);
+        const V4 p1 = v3_read_to_v4(v1, 1.f);
+        const V4 p2 = v3_read_to_v4(v2, 1.f);
 
-        v4_t ssp0, ssp1, ssp2;
+        V4 ssp0, ssp1, ssp2;
         project(&rt->canvas, renderer->settings.projection_matrix, p0, &ssp0);
         project(&rt->canvas, renderer->settings.projection_matrix, p1, &ssp1);
         project(&rt->canvas, renderer->settings.projection_matrix, p2, &ssp2);
@@ -2140,7 +2140,7 @@ void project_and_draw_clipped_textured(
         // TODO: Would be nice to do this elsewhere
         // Scale the uvs to the size of the texture to avoid doing it 
         // per pixel. 
-        // TODO: This could be done via a mesh_instance_t set texture
+        // TODO: This could be done via a MeshInstance set texture
         // function?
         int w = texture->width - 1;
         int h = texture->height - 1;
@@ -2161,10 +2161,10 @@ void render(
     cecs* ecs,
     cecs_view_id render_view,
     cecs_view_id lighting_view,
-	renderer_t* renderer,
-	scene_t* scene,
-	const resources_t* resources,
-	const m4_t view_matrix)
+	Renderer* renderer,
+	Scene* scene,
+	const Resources* resources,
+	const M4 view_matrix)
 {
     // This render function is using the render and lighting 'views' honestly
     // they're more like views at this point.
@@ -2217,7 +2217,7 @@ void render(
     renderer->target.canvas.pixels[centre] = 0x00FF0000;
 }
 /*
-void update_depth_maps(renderer_t* renderer, const scene_t* scene)
+void update_depth_maps(Renderer* renderer, const Scene* scene)
 {
 
 	// TODO: To avoid recalculating shadows for each mesh. We should only do it for ones that have moved.
@@ -2241,18 +2241,18 @@ void update_depth_maps(renderer_t* renderer, const scene_t* scene)
 
 	for (int i = 0; i < pls->count; ++i)
 	{
-		depth_buffer_t* depth_map = &pls->depth_maps[i];
+		DepthBuffer* depth_map = &pls->depth_maps[i];
 		depth_buffer_fill(depth_map, 1.f);
 
 		int pos_i = i * STRIDE_POSITION;
 
-		v3_t pos = v3_read(pls->world_space_positions + pos_i);
+		V3 pos = v3_read(pls->world_space_positions + pos_i);
 		
 		// TODO: TEMP, hardcoded.
-		v3_t dir = { 0, 0, -1 };
+		V3 dir = { 0, 0, -1 };
 		
 		// Create MV matrix for light.
-		m4_t view;
+		M4 view;
 		look_at(v3_mul_f(pos, -1.f), v3_mul_f(dir, -1.f), view);
 
 		// 90 degrees will give us a face of the cube map we want.
@@ -2264,7 +2264,7 @@ void update_depth_maps(renderer_t* renderer, const scene_t* scene)
 		float near_plane = 1.f;
 		float far_plane = 100.f; // TODO: Defined from strength of point light? with attenuation taken into account?
 
-		m4_t proj;
+		M4 proj;
 		m4_projection(fov, aspect_ratio, near_plane, far_plane, proj);
 		
 		const int mis_count = models->mis_count;
@@ -2293,7 +2293,7 @@ void update_depth_maps(renderer_t* renderer, const scene_t* scene)
 			// Calculate the new model matrix from the mi's transform.
 			int transform_index = j * STRIDE_MI_TRANSFORM;
 			
-			m4_t model_matrix;
+			M4 model_matrix;
 			m4_model_matrix(
 				v3_read(mis_transforms + transform_index), 
 				v3_read(mis_transforms + transform_index + 3), 
@@ -2301,7 +2301,7 @@ void update_depth_maps(renderer_t* renderer, const scene_t* scene)
 				model_matrix
 			);
 
-			m4_t model_view;
+			M4 model_view;
 			m4_mul_m4(view, model_matrix, model_view);
 
 			for (int k = 0; k < models->mbs_faces_counts[mb_index]; ++k)
@@ -2318,9 +2318,9 @@ void update_depth_maps(renderer_t* renderer, const scene_t* scene)
 				const int index_parts_v2 = index_v2 * STRIDE_POSITION;
 
 				// Get the vertices from the face indices.
-				v4_t osp0 = v3_read_to_v4(object_space_positions + index_parts_v0, 1.f);
-				v4_t osp1 = v3_read_to_v4(object_space_positions + index_parts_v1, 1.f);
-				v4_t osp2 = v3_read_to_v4(object_space_positions + index_parts_v2, 1.f);
+				V4 osp0 = v3_read_to_v4(object_space_positions + index_parts_v0, 1.f);
+				V4 osp1 = v3_read_to_v4(object_space_positions + index_parts_v1, 1.f);
+				V4 osp2 = v3_read_to_v4(object_space_positions + index_parts_v2, 1.f);
 
 				// TODO: For this, refactor to do model view transformation first per vertex
 				//		 so we're not doing it multiple times with the indexed rendering. 
@@ -2328,16 +2328,16 @@ void update_depth_maps(renderer_t* renderer, const scene_t* scene)
 				// TODO: This should all work the same as the normal rendering really, frustum
 				//		 culling and clipping etc.
 
-				v4_t vsp0, vsp1, vsp2;
+				V4 vsp0, vsp1, vsp2;
 				m4_mul_v4(model_view, osp0, &vsp0);
 				m4_mul_v4(model_view, osp1, &vsp1);
 				m4_mul_v4(model_view, osp2, &vsp2);
 
-				v3_t vsp0_v3 = v4_xyz(vsp0);
-				v3_t vsp1_v3 = v4_xyz(vsp1);
-				v3_t vsp2_v3 = v4_xyz(vsp2);
+				V3 vsp0_v3 = v4_xyz(vsp0);
+				V3 vsp1_v3 = v4_xyz(vsp1);
+				V3 vsp2_v3 = v4_xyz(vsp2);
 
-				v3_t face_normal = v3_normalised(cross(v3_sub_v3(vsp1_v3, vsp0_v3), v3_sub_v3(vsp2_v3, vsp0_v3)));
+				V3 face_normal = v3_normalised(cross(v3_sub_v3(vsp1_v3, vsp0_v3), v3_sub_v3(vsp2_v3, vsp0_v3)));
 
 				// Only fill depth map from back faces, need the normal so doing this manually.
 				if (dot(vsp0_v3, face_normal) <= 0)
@@ -2348,7 +2348,7 @@ void update_depth_maps(renderer_t* renderer, const scene_t* scene)
 
 				// The perspective projection transforms the coordinates into clip space, before the perpsective divide.
 				// which just converts the homogeneous coordinates to cartesian ones. 
-				v4_t clip0, clip1, clip2;
+				V4 clip0, clip1, clip2;
 				m4_mul_v4(proj, vsp0, &clip0);
 				m4_mul_v4(proj, vsp1, &clip1);
 				m4_mul_v4(proj, vsp2, &clip2);
@@ -2369,21 +2369,21 @@ void update_depth_maps(renderer_t* renderer, const scene_t* scene)
 				const float inv_w1 = 1.0f / clip1.w;
 				const float inv_w2 = 1.0f / clip2.w;
 				
-				v4_t ndc0 = {
+				V4 ndc0 = {
 					clip0.x * inv_w0,
 					clip0.y * inv_w0,
 					clip0.z * inv_w0,
 					inv_w0
 				};
 
-				v4_t ndc1 = {
+				V4 ndc1 = {
 					clip1.x * inv_w1,
 					clip1.y * inv_w1,
 					clip1.z * inv_w1,
 					inv_w1
 				};
 
-				v4_t ndc2 = {
+				V4 ndc2 = {
 					clip2.x * inv_w2,
 					clip2.y * inv_w2,
 					clip2.z * inv_w2,
@@ -2391,21 +2391,21 @@ void update_depth_maps(renderer_t* renderer, const scene_t* scene)
 				};
 
 				// Convert NDC to screen space by first converting to 0-1 in all axis.
-				v4_t ssp0 = {
+				V4 ssp0 = {
 					(ndc0.x + 1) * 0.5f * depth_map->width,
 					(-ndc0.y + 1) * 0.5f * depth_map->height,
 					(ndc0.z + 1) * 0.5f,
 					inv_w0
 				};
 
-				v4_t ssp1 = {
+				V4 ssp1 = {
 					(ndc1.x + 1) * 0.5f * depth_map->width,
 					(-ndc1.y + 1) * 0.5f * depth_map->height,
 					(ndc1.z + 1) * 0.5f,
 					inv_w1
 				};
 
-				v4_t ssp2 = {
+				V4 ssp2 = {
 					(ndc2.x + 1) * 0.5f * depth_map->width,
 					(-ndc2.y + 1) * 0.5f * depth_map->height,
 					(ndc2.z + 1) * 0.5f,

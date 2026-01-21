@@ -20,7 +20,7 @@ inline float lerp(float a, float b, float t)
 }
 
 
-inline void direction_to_eulers(const v3_t direction, float* pitch, float* yaw)
+inline void direction_to_eulers(const V3 direction, float* pitch, float* yaw)
 {
 	// Converts a direction to its euler angles, roll is 0 for a direction.
 
