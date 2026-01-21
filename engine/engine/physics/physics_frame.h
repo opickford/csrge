@@ -42,10 +42,10 @@ typedef struct
 
     /*
     // collider_t collides with a target.
-    cecs_archetype_id_t collider_aid;
+    cecs_archetype_id collider_aid;
     int collider_offset;
 
-    cecs_archetype_id_t target_aid;
+    cecs_archetype_id target_aid;
     int target_offset;
     */
 
@@ -65,8 +65,8 @@ typedef struct
 
 typedef struct
 {
-    chds_vec(potential_collision_t) potential_collisions;
-    chds_vec(collision_data_t) collisions;
+    CHDS_VEC(potential_collision_t) potential_collisions;
+    CHDS_VEC(collision_data_t) collisions;
 
 } physics_frame_t;
 

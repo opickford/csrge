@@ -31,8 +31,8 @@
 
 void debug_draw_point_lights(
     canvas_t* canvas, 
-    const cecs_t* ecs,
-    const cecs_view_id_t lighting_view,
+    const cecs* ecs,
+    const cecs_view_id lighting_view,
     const frame_data_t* frame_data, 
     const render_settings_t* settings
     )
@@ -41,7 +41,7 @@ void debug_draw_point_lights(
     int vsps_offset = 0;
 
     // Debug draw point light icons as rects.
-    cecs_view_iter_t it = cecs_view_iter(ecs, lighting_view);
+    cecs_view_iter it = cecs_view_iter_create(ecs, lighting_view);
     while (cecs_view_iter_next(&it))
     {
         point_light_t* pls = cecs_get_column(it, COMPONENT_POINT_LIGHT);
@@ -1090,7 +1090,7 @@ void project(const canvas_t* canvas, const m4_t projection_matrix, v4_t v, v4_t*
 	out->w = inv_w;
 }
 
-void model_to_view_space(cecs_t* ecs, cecs_view_id_t render_view, frame_data_t* frame_data, scene_t* scene, const m4_t view_matrix)
+void model_to_view_space(cecs* ecs, cecs_view_id render_view, frame_data_t* frame_data, scene_t* scene, const m4_t view_matrix)
 {
     // TODO: Could split this into multiple functions.
 
@@ -1101,7 +1101,7 @@ void model_to_view_space(cecs_t* ecs, cecs_view_id_t render_view, frame_data_t* 
     int vsps_offset = 0;
     int vsns_offset = 0;
 
-    cecs_view_iter_t it = cecs_view_iter(ecs, render_view);
+    cecs_view_iter it = cecs_view_iter_create(ecs, render_view);
     while (cecs_view_iter_next(&it))
     {
         mesh_instance_t* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
@@ -1245,7 +1245,7 @@ void model_to_view_space(cecs_t* ecs, cecs_view_id_t render_view, frame_data_t* 
     }	
 }
 
-void lights_world_to_view_space(cecs_t* ecs, cecs_view_id_t lighting_view, frame_data_t* frame_data, const scene_t* scene, const m4_t view_matrix)
+void lights_world_to_view_space(cecs* ecs, cecs_view_id lighting_view, frame_data_t* frame_data, const scene_t* scene, const m4_t view_matrix)
 {
 	// This could be made more efficient by having an array of input world
 	// space positions, however, we will never be able to support enough lights
@@ -1256,7 +1256,7 @@ void lights_world_to_view_space(cecs_t* ecs, cecs_view_id_t lighting_view, frame
 
     int vsps_offset = 0;
 
-    cecs_view_iter_t it = cecs_view_iter(ecs, lighting_view);
+    cecs_view_iter it = cecs_view_iter_create(ecs, lighting_view);
     while (cecs_view_iter_next(&it))
     {
         point_light_t* pls = cecs_get_column(it, COMPONENT_POINT_LIGHT);
@@ -1278,7 +1278,7 @@ void lights_world_to_view_space(cecs_t* ecs, cecs_view_id_t lighting_view, frame
     }
 }
 
-void broad_phase_frustum_culling(cecs_t* ecs, cecs_view_id_t render_view, frame_data_t* frame_data, scene_t* scene, const view_frustum_t* view_frustum)
+void broad_phase_frustum_culling(cecs* ecs, cecs_view_id render_view, frame_data_t* frame_data, scene_t* scene, const view_frustum_t* view_frustum)
 {
 	// Performs broad phase frustum culling on the models, writes out the planes
 	// that need to be clipped against.
@@ -1291,7 +1291,7 @@ void broad_phase_frustum_culling(cecs_t* ecs, cecs_view_id_t render_view, frame_
 	const int num_planes = view_frustum->planes_count;
 	const plane_t* planes = view_frustum->planes;
 
-    cecs_view_iter_t it = cecs_view_iter(ecs, render_view);
+    cecs_view_iter it = cecs_view_iter_create(ecs, render_view);
     while (cecs_view_iter_next(&it))
     {
         mesh_instance_t* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
@@ -1345,7 +1345,7 @@ void broad_phase_frustum_culling(cecs_t* ecs, cecs_view_id_t render_view, frame_
 	frame_data->num_visible_mis = visible_mis_count;
 }
 
-void cull_backfaces(cecs_t* ecs, cecs_view_id_t render_view, frame_data_t* frame_data, scene_t* scene)
+void cull_backfaces(cecs* ecs, cecs_view_id render_view, frame_data_t* frame_data, scene_t* scene)
 {
 	const mesh_base_t* mbs = scene->mesh_bases.bases;
 
@@ -1398,9 +1398,9 @@ void cull_backfaces(cecs_t* ecs, cecs_view_id_t render_view, frame_data_t* frame
 }
 
 void light_front_faces(
-    cecs_t* ecs, 
-    cecs_view_id_t render_view, 
-    cecs_view_id_t lighting_view, 
+    cecs* ecs, 
+    cecs_view_id render_view, 
+    cecs_view_id lighting_view, 
     frame_data_t* frame_data, 
     scene_t* scene, 
     const v3_t ambient)
@@ -1497,7 +1497,7 @@ void light_front_faces(
 
                 // TODO: This iter code is actually using a decently large portion of CPU time!!!!
                 //       Not happy with how much it is using.
-                cecs_view_iter_t it = cecs_view_iter(ecs, lighting_view);
+                cecs_view_iter it = cecs_view_iter_create(ecs, lighting_view);
                 while (cecs_view_iter_next(&it))
                 {
                     point_light_t* pls = cecs_get_column(it, COMPONENT_POINT_LIGHT);
@@ -1577,7 +1577,7 @@ void light_front_faces(
 	}
 }
 
-void prepare_for_clipping(cecs_t* ecs, cecs_view_id_t render_view, frame_data_t* frame_data, scene_t* scene)
+void prepare_for_clipping(cecs* ecs, cecs_view_id render_view, frame_data_t* frame_data, scene_t* scene)
 {
     // TODO: Comments on how the data is packed together.
 
@@ -1690,7 +1690,7 @@ void prepare_for_clipping(cecs_t* ecs, cecs_view_id_t render_view, frame_data_t*
 }
 
 void clip_project_and_draw(
-    cecs_view_id_t render_view,
+    cecs_view_id render_view,
 	renderer_t* renderer,
 	render_target_t* rt,
 	frame_data_t* frame_data,
@@ -2158,9 +2158,9 @@ void project_and_draw_clipped_textured(
 }
 
 void render(
-    cecs_t* ecs,
-    cecs_view_id_t render_view,
-    cecs_view_id_t lighting_view,
+    cecs* ecs,
+    cecs_view_id render_view,
+    cecs_view_id lighting_view,
 	renderer_t* renderer,
 	scene_t* scene,
 	const resources_t* resources,

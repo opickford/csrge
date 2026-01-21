@@ -17,7 +17,7 @@ status_t canvas_init(canvas_t* canvas, int width, int height)
 	canvas->height = height;
 
     const size_t length = (size_t)width * height * 4;
-    chds_vec_reserve(canvas->pixels, length);
+    CHDS_VEC_RESERVE(canvas->pixels, length);
 	
 	if (!canvas->pixels)
 	{
@@ -78,7 +78,7 @@ status_t canvas_init_from_bitmap(canvas_t* canvas, const char* file)
     bmi.bmiHeader.biCompression = BI_RGB; // Uncompressed RGB.
 
     // Allocate memory for pixels
-    chds_vec_reserve(canvas->pixels, bitmap.bmWidthBytes * bitmap.bmHeight);
+    CHDS_VEC_RESERVE(canvas->pixels, bitmap.bmWidthBytes * bitmap.bmHeight);
     if (!canvas->pixels)
     {
         return STATUS_ALLOC_FAILURE;
@@ -198,7 +198,7 @@ status_t canvas_resize(canvas_t* canvas, int width, int height)
 	// Allocate memory for the new array.
 	// TODO: Use my memory allocating helpers for this.
     size_t length = width * height;
-    chds_vec_reserve(canvas->pixels, length);
+    CHDS_VEC_RESERVE(canvas->pixels, length);
 
 	// Check the allocation worked.
 	if (!canvas->pixels)

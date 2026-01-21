@@ -52,10 +52,10 @@ status_t texture_load_from_bmp(texture_t* texture, const char* file)
     bmi.bmiHeader.biCompression = BI_RGB; // Uncompressed RGB.
 
     // Read the image as an array of ints
-    chds_vec(int) temp_pixels = { 0 };
+    CHDS_VEC(int) temp_pixels = { 0 };
 
-    chds_vec_resize(temp_pixels, bitmap.bmWidthBytes * bitmap.bmHeight);
-    if (chds_vec_capacity(temp_pixels) != bitmap.bmWidthBytes * bitmap.bmHeight)
+    CHDS_VEC_RESIZE(temp_pixels, bitmap.bmWidthBytes * bitmap.bmHeight);
+    if (CHDS_VEC_CAPACITY(temp_pixels) != bitmap.bmWidthBytes * bitmap.bmHeight)
     {
         return STATUS_ALLOC_FAILURE;
     }
@@ -80,7 +80,7 @@ status_t texture_load_from_bmp(texture_t* texture, const char* file)
         log_warn("Potential memory leak. Failed to ReleaseDC when texture_load_from_bmp.");
     }
 
-    chds_vec_resize(texture->pixels, texture->width * texture->height * 3);
+    CHDS_VEC_RESIZE(texture->pixels, texture->width * texture->height * 3);
     
     // TODO: Gotta test the texture a few ways, do we want r,g,b uint8? 3 floats? what.
     for (int i = 0; i < texture->width * texture->height; ++i)

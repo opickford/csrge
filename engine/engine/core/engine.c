@@ -8,6 +8,8 @@
 
 #include "common/colour.h"
 
+#include <cecs/ecs.h>
+
 #include <Windows.h>
 
 #include <stdio.h>
@@ -16,7 +18,7 @@
 // Internal helpers.
 static void engine_setup_ecs(engine_t* engine)
 {
-    cecs_t* ecs = cecs_create();
+    cecs* ecs = cecs_create();
     engine->ecs = ecs;
 
     // Setup core components, mesh_instance_t etc.
@@ -25,11 +27,11 @@ static void engine_setup_ecs(engine_t* engine)
     // TODO: Systems should initialise their own views.
 
     // Setup views.
-    engine->render_view_id = cecs_view(ecs, 
+    engine->render_view_id = cecs_view_create(ecs, 
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_MESH_INSTANCE) | CECS_COMPONENT_ID_TO_BITSET(COMPONENT_TRANSFORM), 
         0);
     
-    engine->lighting_view_id = cecs_view(ecs, CECS_COMPONENT_ID_TO_BITSET(COMPONENT_POINT_LIGHT), 0);
+    engine->lighting_view_id = cecs_view_create(ecs, CECS_COMPONENT_ID_TO_BITSET(COMPONENT_POINT_LIGHT), 0);
 }
 
 status_t engine_init(engine_t* engine, int window_width, int window_height)
@@ -252,8 +254,8 @@ void engine_run(engine_t* engine)
         // TODO: TEMP: Debugging rendering the velocities.
         if (g_debug_velocities) 
         {    
-            cecs_view_id_t v = cecs_view(engine->ecs, CECS_COMPONENT_ID_TO_BITSET(COMPONENT_TRANSFORM) | CECS_COMPONENT_ID_TO_BITSET(COMPONENT_PHYSICS_DATA), 0);
-            cecs_view_iter_t it = cecs_view_iter(engine->ecs, v);
+            cecs_view_id v = cecs_view_create(engine->ecs, CECS_COMPONENT_ID_TO_BITSET(COMPONENT_TRANSFORM) | CECS_COMPONENT_ID_TO_BITSET(COMPONENT_PHYSICS_DATA), 0);
+            cecs_view_iter it = cecs_view_iter_create(engine->ecs, v);
 
             while (cecs_view_iter_next(&it))
             {
@@ -289,8 +291,8 @@ void engine_run(engine_t* engine)
         {
             int total_faces = 0;
             int mis_count = 0;
-            const cecs_t* ecs = engine->ecs;
-            cecs_view_iter_t it = cecs_view_iter(ecs, engine->render_view_id);
+            const cecs* ecs = engine->ecs;
+            cecs_view_iter it = cecs_view_iter_create(ecs, engine->render_view_id);
             while (cecs_view_iter_next(&it))
             {
                 mesh_instance_t* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);

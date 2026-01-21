@@ -13,9 +13,9 @@
 #include <Windows.h> // max - TODO: Somewhere else?
 
 status_t frame_data_init(
-    cecs_t* ecs, 
-    cecs_view_id_t render_view,
-    cecs_view_id_t lighting_view,
+    cecs* ecs, 
+    cecs_view_id render_view,
+    cecs_view_id lighting_view,
     frame_data_t* frame_data, 
     scene_t* scene)
 {
@@ -36,7 +36,7 @@ status_t frame_data_init(
 
     const mesh_base_t* mbs = scene->mesh_bases.bases;
 
-    cecs_view_iter_t it = cecs_view_iter(ecs, render_view);
+    cecs_view_iter it = cecs_view_iter_create(ecs, render_view);
     while (cecs_view_iter_next(&it))
     {
         mesh_instance_t* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
@@ -57,25 +57,25 @@ status_t frame_data_init(
     }
 
 	// transform_t Stage
-    chds_vec_reserve(frame_data->view_space_positions, total_positions * STRIDE_POSITION);
+    CHDS_VEC_RESERVE(frame_data->view_space_positions, total_positions * STRIDE_POSITION);
 	
 	// TODO: Fails in release?? heap corruption, so potentially from before?
-    chds_vec_reserve(frame_data->view_space_normals, total_normals * STRIDE_NORMAL);
+    CHDS_VEC_RESERVE(frame_data->view_space_normals, total_normals * STRIDE_NORMAL);
 
 	// Broad Phase Frustum Culling
-    chds_vec_reserve(frame_data->visible_mis, mis_count);
+    CHDS_VEC_RESERVE(frame_data->visible_mis, mis_count);
 	frame_data->num_visible_mis = 0;
 
 	// Intersected planes stores the number of intersected planes and then the index of each plane,
 	// so give room for the max planes + 1.
-    chds_vec_reserve(frame_data->intersected_planes, mis_count * (MAX_FRUSTUM_PLANES + 1));
+    CHDS_VEC_RESERVE(frame_data->intersected_planes, mis_count * (MAX_FRUSTUM_PLANES + 1));
 
 	// Backface Culling Output
-    chds_vec_reserve(frame_data->front_face_indices, total_faces);
+    CHDS_VEC_RESERVE(frame_data->front_face_indices, total_faces);
 
 	// Lighting
 	// TODO: TEMP: For now no shadows so only 3 comps?
-    chds_vec_reserve(frame_data->vertex_lighting, total_faces * STRIDE_FACE_VERTICES * STRIDE_COLOUR);
+    CHDS_VEC_RESERVE(frame_data->vertex_lighting, total_faces * STRIDE_FACE_VERTICES * STRIDE_COLOUR);
 
 
     // TODO: I think I'll have to rethink this entire clipping process once we introduce dynamic lights again
@@ -93,22 +93,22 @@ status_t frame_data_init(
     // TODO: More comments about this stuff and components per vertex etc.
 
 	frame_data->num_clipped_faces = 0;
-    chds_vec_reserve(frame_data->faces_to_clip, components_per_vertex * total_faces * STRIDE_FACE_VERTICES);
-    chds_vec_reserve(frame_data->clipped_faces, components_per_vertex * max_tris_at_once * STRIDE_FACE_VERTICES);
+    CHDS_VEC_RESERVE(frame_data->faces_to_clip, components_per_vertex * total_faces * STRIDE_FACE_VERTICES);
+    CHDS_VEC_RESERVE(frame_data->clipped_faces, components_per_vertex * max_tris_at_once * STRIDE_FACE_VERTICES);
 
-    chds_vec_reserve(frame_data->temp_clipped_faces0, components_per_vertex * max_tris_at_once * STRIDE_FACE_VERTICES);
-    chds_vec_reserve(frame_data->temp_clipped_faces1, components_per_vertex * max_tris_at_once * STRIDE_FACE_VERTICES);
+    CHDS_VEC_RESERVE(frame_data->temp_clipped_faces0, components_per_vertex * max_tris_at_once * STRIDE_FACE_VERTICES);
+    CHDS_VEC_RESERVE(frame_data->temp_clipped_faces1, components_per_vertex * max_tris_at_once * STRIDE_FACE_VERTICES);
 
     // Lighting view
     int num_point_lights = 0;
-    cecs_view_iter_t lighting_it = cecs_view_iter(ecs, lighting_view);
+    cecs_view_iter lighting_it = cecs_view_iter_create(ecs, lighting_view);
     while (cecs_view_iter_next(&lighting_it))
     {
         // TODO: If we introduce other lights this logic needs updating.
         num_point_lights += lighting_it.num_entities;
     }
 
-    chds_vec_reserve(frame_data->point_lights_view_space_positions, num_point_lights * STRIDE_POSITION);
+    CHDS_VEC_RESERVE(frame_data->point_lights_view_space_positions, num_point_lights * STRIDE_POSITION);
 
 	return STATUS_OK;
 }

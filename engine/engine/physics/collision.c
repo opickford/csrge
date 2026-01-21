@@ -20,7 +20,7 @@ static void update_collision_mesh_bounding_sphere(collider_t* collider, const me
 {
     const mesh_base_t* mb = collider->shape.mesh.mb;
 
-    chds_vec_reserve(collider->shape.mesh.wsps, mb->num_positions);
+    CHDS_VEC_RESERVE(collider->shape.mesh.wsps, mb->num_positions);
 
     // Calculate model matrix.
     // TODO: rotation or direction or eulers?
@@ -80,7 +80,7 @@ static void update_colliders(physics_t* physics, scene_t* scene)
 {
     // TODO: Eventually we might want specific collision meshes to simplify it?
     // TODO: E.g. we don't need the higher detail meshes to collide with, but not needed for now.
-    cecs_view_iter_t it = cecs_view_iter(physics->ecs, physics->colliders_view);
+    cecs_view_iter it = cecs_view_iter_create(physics->ecs, physics->colliders_view);
     while (cecs_view_iter_next(&it))
     {
         const transform_t* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
@@ -136,13 +136,13 @@ static void broad_phase(physics_t* physics, scene_t* scene)
     // TODO: not ideal if the narrow phase is a sphere, but obv not an issue for now.
     //       but should work this out at some point ^
 
-    chds_vec_clear(physics->frame.potential_collisions);
+    CHDS_VEC_CLEAR(physics->frame.potential_collisions);
 
     // TODO: How can we get the number of entities in a nicer way?
 
     int num_entities = 0;
     {
-        cecs_view_iter_t it = cecs_view_iter(physics->ecs, physics->colliders_view);
+        cecs_view_iter it = cecs_view_iter_create(physics->ecs, physics->colliders_view);
         while (cecs_view_iter_next(&it))
         {
             num_entities += it.num_entities;
@@ -150,7 +150,7 @@ static void broad_phase(physics_t* physics, scene_t* scene)
     }
 
     // TODO: Idk what the calc is.
-    chds_vec_reserve(physics->frame.potential_collisions, num_entities * num_entities);
+    CHDS_VEC_RESERVE(physics->frame.potential_collisions, num_entities * num_entities);
 
     /*
     We only need to test entities past the current one in the outer loop,
@@ -168,7 +168,7 @@ static void broad_phase(physics_t* physics, scene_t* scene)
             test_collision
     
     */
-    cecs_view_iter_t it = cecs_view_iter(physics->ecs, physics->moving_colliders_view);
+    cecs_view_iter it = cecs_view_iter_create(physics->ecs, physics->moving_colliders_view);
     while (cecs_view_iter_next(&it))
     {
         physics_data_t* physics_datas = cecs_get_column(it, COMPONENT_PHYSICS_DATA);
@@ -201,7 +201,7 @@ static void broad_phase(physics_t* physics, scene_t* scene)
             // TODO: This might not work if we don't resolve collisions
             //       properly between two entities!!!!!!! Otherwise only
             //       one will be updated!!!!!!
-            cecs_view_iter_t it_from_it0 = it; // TODO: Rename this....
+            cecs_view_iter it_from_it0 = it; // TODO: Rename this....
 
             // Check each remaining moving entity
             do
@@ -247,13 +247,13 @@ static void broad_phase(physics_t* physics, scene_t* scene)
                             .t1 = transform1
                         };
 
-                        chds_vec_push_back(physics->frame.potential_collisions, pc);
+                        CHDS_VEC_PUSH_BACK(physics->frame.potential_collisions, pc);
                     }
                 }
             } while (cecs_view_iter_next(&it_from_it0));
 
             // Check with each static entity
-            cecs_view_iter_t sc_it = cecs_view_iter(physics->ecs,
+            cecs_view_iter sc_it = cecs_view_iter_create(physics->ecs,
                 physics->static_colliders_view);
 
             while (cecs_view_iter_next(&sc_it))
@@ -289,7 +289,7 @@ static void broad_phase(physics_t* physics, scene_t* scene)
                             .t1 = transform1
                         };
 
-                        chds_vec_push_back(physics->frame.potential_collisions, pc);
+                        CHDS_VEC_PUSH_BACK(physics->frame.potential_collisions, pc);
                     }
                 }
             }
@@ -608,7 +608,7 @@ static void narrow_ellipsoid_vs_mi(physics_t* physics, scene_t* scene, potential
             cd.hit = 1;
             cd.penetration_depth = penetration_depth;
             cd.pc = pc;
-            chds_vec_push_back(physics->frame.collisions, cd);
+            CHDS_VEC_PUSH_BACK(physics->frame.collisions, cd);
         }
     }
 }
@@ -649,14 +649,14 @@ static void narrow_sphere_vs_sphere(physics_t* physics, scene_t* scene, potentia
     cd.hit = 1;
     cd.pc = pc;
 
-    chds_vec_push_back(physics->frame.collisions, cd);
+    CHDS_VEC_PUSH_BACK(physics->frame.collisions, cd);
 }
 
 static void narrow_phase(physics_t* physics, scene_t* scene)
 {
-    chds_vec_clear(physics->frame.collisions);
+    CHDS_VEC_CLEAR(physics->frame.collisions);
 
-    const int num_potential_collisions = (int)chds_vec_size(physics->frame.potential_collisions);
+    const int num_potential_collisions = (int)CHDS_VEC_SIZE(physics->frame.potential_collisions);
     for (int i = 0; i < num_potential_collisions; ++i)
     {
         potential_collision_t pc = physics->frame.potential_collisions[i];
@@ -717,7 +717,7 @@ static void resolve_collisions(physics_t* physics, scene_t* scene)
     // Currently just iterating through the collisions, seems to handle everything well 
     // enough for now, can refactor this to solve collisions together in the future if 
     // needed.
-    const int num_collisions = (int)chds_vec_size(physics->frame.collisions);
+    const int num_collisions = (int)CHDS_VEC_SIZE(physics->frame.collisions);
 
     for (int i = 0; i < num_collisions; ++i)
     {
@@ -754,7 +754,7 @@ uint8_t handle_collisions(physics_t* physics, scene_t* scene)
 
     // Return 0 to show there were no collisions, allows us to early out
     // of iterative solver.
-    return (uint8_t)((int)chds_vec_size(physics->frame.collisions) > 0.f);
+    return (uint8_t)((int)CHDS_VEC_SIZE(physics->frame.collisions) > 0.f);
 }
 
 void collider_init(collider_t* c)

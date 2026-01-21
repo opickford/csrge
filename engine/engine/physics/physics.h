@@ -21,15 +21,15 @@ typedef struct physics
 {
     // TODO: Should this contain a scene also?
 
-    cecs_t* ecs;
+    cecs* ecs;
 
     physics_frame_t frame;
 
     // Views
-    cecs_view_id_t physics_view; // TODO: Rename physicsdata view?
-    cecs_view_id_t moving_colliders_view;
-    cecs_view_id_t static_colliders_view;
-    cecs_view_id_t colliders_view;
+    cecs_view_id physics_view; // TODO: Rename physicsdata view?
+    cecs_view_id moving_colliders_view;
+    cecs_view_id static_colliders_view;
+    cecs_view_id colliders_view;
 
     uint8_t max_collision_iters;
 
@@ -49,7 +49,7 @@ typedef struct physics_data
 
 void physics_data_init(physics_data_t* data);
 
-status_t physics_init(physics_t* physics, cecs_t* ecs);
+status_t physics_init(physics_t* physics, cecs* ecs);
 
 void physics_tick(physics_t* physics, scene_t* scene, float dt);
 

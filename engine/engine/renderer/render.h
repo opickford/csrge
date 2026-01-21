@@ -32,8 +32,8 @@
 
 void debug_draw_point_lights(
     canvas_t* canvas,
-    const cecs_t* ecs,
-    const cecs_view_id_t lighting_view,
+    const cecs* ecs,
+    const cecs_view_id lighting_view,
     const frame_data_t* frame_data,
     const render_settings_t* settings
 );
@@ -86,23 +86,23 @@ void project(const canvas_t* canvas, const m4_t projection_matrix, v4_t v, v4_t*
 
 // REFACTORED PIPELINE
 
-void model_to_view_space(cecs_t* ecs, cecs_view_id_t render_view, frame_data_t* frame_data, scene_t* scene, const m4_t view_matrix);
-void lights_world_to_view_space(cecs_t* ecs, cecs_view_id_t lighting_view, frame_data_t* frame_data, const scene_t* scene, const m4_t view_matrix);
-void broad_phase_frustum_culling(cecs_t* ecs, cecs_view_id_t render_view, frame_data_t* frame_data, scene_t* scene, const view_frustum_t* view_frustum);
-void cull_backfaces(cecs_t* ecs, cecs_view_id_t render_view, frame_data_t* frame_data, scene_t* scene);
+void model_to_view_space(cecs* ecs, cecs_view_id render_view, frame_data_t* frame_data, scene_t* scene, const m4_t view_matrix);
+void lights_world_to_view_space(cecs* ecs, cecs_view_id lighting_view, frame_data_t* frame_data, const scene_t* scene, const m4_t view_matrix);
+void broad_phase_frustum_culling(cecs* ecs, cecs_view_id render_view, frame_data_t* frame_data, scene_t* scene, const view_frustum_t* view_frustum);
+void cull_backfaces(cecs* ecs, cecs_view_id render_view, frame_data_t* frame_data, scene_t* scene);
 
 void light_front_faces(
-    cecs_t* ecs, 
-    cecs_view_id_t render_view, 
-    cecs_view_id_t lighting_view, 
+    cecs* ecs, 
+    cecs_view_id render_view, 
+    cecs_view_id lighting_view, 
     frame_data_t* frame_data, 
     scene_t* scene, 
     const v3_t ambient
 );
 
-void prepare_for_clipping(cecs_t* ecs, cecs_view_id_t render_view, frame_data_t* frame_data, scene_t* scene);
+void prepare_for_clipping(cecs* ecs, cecs_view_id render_view, frame_data_t* frame_data, scene_t* scene);
 void clip_project_and_draw(
-    cecs_view_id_t render_view,
+    cecs_view_id render_view,
 	renderer_t* renderer,
 	render_target_t* rt,
 	frame_data_t* frame_data,
@@ -124,9 +124,9 @@ void project_and_draw_clipped_textured(
     const texture_t* texture);
 
 void render(
-    cecs_t* ecs,
-    cecs_view_id_t render_view,
-    cecs_view_id_t lighting_view,
+    cecs* ecs,
+    cecs_view_id render_view,
+    cecs_view_id lighting_view,
     renderer_t* renderer,
     scene_t* scene,
     const resources_t* resources,

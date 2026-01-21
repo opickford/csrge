@@ -40,7 +40,7 @@ typedef struct mesh_instance
 	// TODO: Do we actually want per vertex albedos? I reckon per face at least
 	//		 makes more sense.
     // TODO: Float or v3_t???
-	chds_vec(v3_t) vertex_alebdos;
+	CHDS_VEC(v3_t) vertex_alebdos;
 
     // TODO: A scene could have a base ambient light, but mesh instances should also be able to!
     //       This will let them glow. This could potentially be per vertex but probably not worth.

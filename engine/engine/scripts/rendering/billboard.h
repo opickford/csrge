@@ -3,7 +3,7 @@
 
 #include <core/engine.h>
 
-inline void update_billboard(engine_t* engine, cecs_entity_id_t eid, float dt)
+inline void update_billboard(engine_t* engine, cecs_entity_id eid, float dt)
 {
     // TODO: Should be a billboard tag component which you add to an entity, then a system does this for you.
     // TODO: Could be an engine functon to create a billboard entity.

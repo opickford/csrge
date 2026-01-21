@@ -21,18 +21,18 @@ typedef struct
     float physics_alpha; // Time through the physics step, used for smooth interpolation.
 
 	// transform_t Stage
-	chds_vec(v3_t) view_space_positions;
-    chds_vec(v3_t) view_space_normals;
+	CHDS_VEC(v3_t) view_space_positions;
+    CHDS_VEC(v3_t) view_space_normals;
 
-    chds_vec(v3_t) point_lights_view_space_positions;
+    CHDS_VEC(v3_t) point_lights_view_space_positions;
 
 	// Broad Phase Frustum Culling
-    chds_vec(mesh_instance_t) visible_mis;
+    CHDS_VEC(mesh_instance_t) visible_mis;
 	int num_visible_mis;
-	chds_vec(uint8_t) intersected_planes;
+	CHDS_VEC(uint8_t) intersected_planes;
 
 	// Backface Culling Output
-	chds_vec(int) front_face_indices;
+	CHDS_VEC(int) front_face_indices;
 
 	// Lighting
 	// TODO: Where should the vertex light output be written to?
@@ -49,23 +49,23 @@ typedef struct
 
     // TODO: Refactoring this so it's not just float arrays.
 	
-    chds_vec(v3_t) vertex_lighting;
+    CHDS_VEC(v3_t) vertex_lighting;
 
 	// Clipping
-    chds_vec(float) faces_to_clip;  // Input to clip.
-	chds_vec(float) clipped_faces;  // Clipping output.
+    CHDS_VEC(float) faces_to_clip;  // Input to clip.
+	CHDS_VEC(float) clipped_faces;  // Clipping output.
 	int num_clipped_faces; // Number of faces in the output buffer.
 
     // Intermediate buffers for clipping, alternate between per plane.
-    chds_vec(float) temp_clipped_faces0; 
-    chds_vec(float) temp_clipped_faces1;
+    CHDS_VEC(float) temp_clipped_faces0; 
+    CHDS_VEC(float) temp_clipped_faces1;
 
 } frame_data_t;
 
 status_t frame_data_init(
-    cecs_t* ecs, 
-    cecs_view_id_t render_view, 
-    cecs_view_id_t lighting_view, 
+    cecs* ecs, 
+    cecs_view_id render_view, 
+    cecs_view_id lighting_view, 
     frame_data_t* frame_data, 
     scene_t* scene);
 
