@@ -12,12 +12,12 @@
 
 #include <Windows.h> // max - TODO: Somewhere else?
 
-status_t frame_data_init(
+Status frame_data_init(
     cecs* ecs, 
     cecs_view_id render_view,
     cecs_view_id lighting_view,
-    frame_data_t* frame_data, 
-    scene_t* scene)
+    FrameData* frame_data, 
+    Scene* scene)
 {
     // TODO: A big issue with this view is that it will simply fail if 
     //       we don't have enough memory, honestly no clue how we could
@@ -34,18 +34,18 @@ status_t frame_data_init(
     int total_faces = 0;
     int most_faces = 0;
 
-    const mesh_base_t* mbs = scene->mesh_bases.bases;
+    const MeshBase* mbs = scene->mesh_bases.bases;
 
     cecs_view_iter it = cecs_view_iter_create(ecs, render_view);
     while (cecs_view_iter_next(&it))
     {
-        mesh_instance_t* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
+        MeshInstance* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
 
         for (int i = 0; i < it.num_entities; ++i)
         {
-            mesh_instance_t* mi = &mis[i];
+            MeshInstance* mi = &mis[i];
 
-            const mesh_base_t* mb = &scene->mesh_bases.bases[mi->mb_id];
+            const MeshBase* mb = &scene->mesh_bases.bases[mi->mb_id];
             total_positions += mb->num_positions;
             total_normals += mb->num_normals;
             total_faces += mb->num_faces;
@@ -56,7 +56,7 @@ status_t frame_data_init(
         }
     }
 
-	// transform_t Stage
+	// Transform Stage
     CHDS_VEC_RESERVE(frame_data->view_space_positions, total_positions * STRIDE_POSITION);
 	
 	// TODO: Fails in release?? heap corruption, so potentially from before?
@@ -113,6 +113,6 @@ status_t frame_data_init(
 	return STATUS_OK;
 }
 
-void frame_data_destroy(frame_data_t* frame_data)
+void frame_data_destroy(FrameData* frame_data)
 {
 }

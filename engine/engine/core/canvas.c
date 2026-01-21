@@ -9,9 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-status_t canvas_init(canvas_t* canvas, int width, int height)
+Status canvas_init(Canvas* canvas, int width, int height)
 {
-	memset(canvas, 0, sizeof(canvas_t));
+	memset(canvas, 0, sizeof(Canvas));
 
 	canvas->width = width;
 	canvas->height = height;
@@ -31,13 +31,13 @@ status_t canvas_init(canvas_t* canvas, int width, int height)
 	return STATUS_OK;
 }
 
-status_t canvas_init_from_bitmap(canvas_t* canvas, const char* file)
+Status canvas_init_from_bitmap(Canvas* canvas, const char* file)
 {
     // TODO: Do we need to use Windows.h here? If we're only loading
     //       bitmaps, the image loading code should be quite simple.
 
     // Initialise the texture.
-    memset(canvas, 0, sizeof(canvas_t));
+    memset(canvas, 0, sizeof(Canvas));
         
     // Try load the bitmap.
     HBITMAP h_bitmap = (HBITMAP)LoadImageA(
@@ -107,7 +107,7 @@ status_t canvas_init_from_bitmap(canvas_t* canvas, const char* file)
     return STATUS_OK;
 }
 
-status_t canvas_write_to_bmp(const canvas_t* canvas, const char* file)
+Status canvas_write_to_bmp(const Canvas* canvas, const char* file)
 {
     // TODO: TEMP: Copied from: https://stackoverflow.com/a/55504419
 
@@ -187,7 +187,7 @@ status_t canvas_write_to_bmp(const canvas_t* canvas, const char* file)
     return STATUS_OK;
 }
 
-status_t canvas_resize(canvas_t* canvas, int width, int height)
+Status canvas_resize(Canvas* canvas, int width, int height)
 {
 	// Check the size has changed.
 	if (canvas->width == width && canvas->height == height)
@@ -214,7 +214,7 @@ status_t canvas_resize(canvas_t* canvas, int width, int height)
 	return STATUS_OK;
 }
 
-void canvas_fill(canvas_t* canvas, const unsigned int colour)
+void canvas_fill(Canvas* canvas, const unsigned int colour)
 {
 	// TODO: Look for some sort of blit or fill function 
 	const int length = canvas->width * canvas->height;	
@@ -230,7 +230,7 @@ void canvas_fill(canvas_t* canvas, const unsigned int colour)
 	}
 }
 
-void canvas_draw(const canvas_t* source, canvas_t* target, int x_offset, int y_offset)
+void canvas_draw(const Canvas* source, Canvas* target, int x_offset, int y_offset)
 {
     int* source_data = source->pixels;
     int* target_data = target->pixels;
@@ -244,7 +244,7 @@ void canvas_draw(const canvas_t* source, canvas_t* target, int x_offset, int y_o
     }
 }
 
-void canvas_destroy(canvas_t* canvas)
+void canvas_destroy(Canvas* canvas)
 {
     chds_vec_destroy(canvas->pixels);
 

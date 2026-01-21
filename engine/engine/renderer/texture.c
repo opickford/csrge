@@ -5,13 +5,13 @@
 
 #include <Windows.h>
 
-status_t texture_load_from_bmp(texture_t* texture, const char* file)
+Status texture_load_from_bmp(Texture* texture, const char* file)
 {
     // TODO: Do we need to use Windows.h here? If we're only loading
     //       bitmaps, the image loading code could be quite simple.
 
     // Initialise the texture.
-    memset(texture, 0, sizeof(texture_t));
+    memset(texture, 0, sizeof(Texture));
 
     // Try load the bitmap.
     HBITMAP h_bitmap = (HBITMAP)LoadImageA(
@@ -106,7 +106,7 @@ status_t texture_load_from_bmp(texture_t* texture, const char* file)
     return STATUS_OK;
 }
 
-void texture_destroy(texture_t* texture)
+void texture_destroy(Texture* texture)
 {
     chds_vec_destroy(texture->pixels);
 

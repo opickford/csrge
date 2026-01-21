@@ -9,15 +9,15 @@
 
 // TODO: Refactor to simply be a canvas?? (e.g. remove texture?)
 typedef struct {
-	//float* data; // TODO: Should texture be uint32_t like canvas_t again? And we can still access each component?
+	//float* data; // TODO: Should texture be uint32_t like Canvas again? And we can still access each component?
     CHDS_VEC(float) pixels;
 	int width;
 	int height;
 
-} texture_t;
+} Texture;
 
-status_t texture_load_from_bmp(texture_t* texture, const char* file);
+Status texture_load_from_bmp(Texture* texture, const char* file);
 
-void texture_destroy(texture_t* texture);
+void texture_destroy(Texture* texture);
 
 #endif

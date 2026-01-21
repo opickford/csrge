@@ -23,7 +23,7 @@ typedef struct physics
 
     cecs* ecs;
 
-    physics_frame_t frame;
+    PhysicsFrame frame;
 
     // Views
     cecs_view_id physics_view; // TODO: Rename physicsdata view?
@@ -33,25 +33,25 @@ typedef struct physics
 
     uint8_t max_collision_iters;
 
-} physics_t;
+} Physics;
 
 // TODO: Move to separate file?
 typedef struct physics_data
 {
-    v3_t impulses; // Forces applied instantaneously.
-    v3_t velocity;
+    V3 impulses; // Forces applied instantaneously.
+    V3 velocity;
 
     float mass;
 
     // TODO: TEMP
     uint8_t floating;
-} physics_data_t;
+} PhysicsData;
 
-void physics_data_init(physics_data_t* data);
+void physics_data_init(PhysicsData* data);
 
-status_t physics_init(physics_t* physics, cecs* ecs);
+Status physics_init(Physics* physics, cecs* ecs);
 
-void physics_tick(physics_t* physics, scene_t* scene, float dt);
+void physics_tick(Physics* physics, Scene* scene, float dt);
 
 
 #endif

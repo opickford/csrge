@@ -7,23 +7,23 @@
 
 typedef struct transform
 {
-    v3_t position;
-    v3_t scale;
-    v3_t rotation;
+    V3 position;
+    V3 scale;
+    V3 rotation;
 
     // Store previous state for lerp between state updated by physics.
-    v3_t previous_position;
-    v3_t previous_rotation;
-    //v3_t previous_scale;
+    V3 previous_position;
+    V3 previous_rotation;
+    //V3 previous_scale;
 
-} transform_t;
+} Transform;
 
 
-inline void transform_init(transform_t* t)
+inline void transform_init(Transform* t)
 {
-    t->position = (v3_t){ 0.f, 0.f, 0.f };
-    t->scale = (v3_t){ 1.f, 1.f, 1.f };
-    t->rotation = (v3_t){ 0.f, 0.f, 0.f };
+    t->position = (V3){ 0.f, 0.f, 0.f };
+    t->scale = (V3){ 1.f, 1.f, 1.f };
+    t->rotation = (V3){ 0.f, 0.f, 0.f };
 
     t->previous_position = t->position;
     t->previous_rotation = t->rotation;

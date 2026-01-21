@@ -7,7 +7,7 @@
 #include "resources.h"
 #include "components.h"
 
-#include "ui/ui.h"
+#include "UI/UI.h"
 
 // TODO: These need to be refactored.
 #include "renderer/renderer.h"
@@ -23,7 +23,7 @@ typedef enum input_mode
     INPUT_MODE_NOCLIP,
     INPUT_MODE_GAME,
     INPUT_MODE_INVALID
-} input_mode_t;
+} InputMode;
 
 typedef struct
 {
@@ -37,52 +37,52 @@ typedef struct
     cecs_view_id moving_collider_view_id;
     cecs_view_id static_collider_view_id;
 
-	// engine_t components.
-	window_t window;
-	ui_t ui;
-	renderer_t renderer;
-	resources_t resources; // Works fine for now, potentially something to refactor.
-    physics_t physics;
+	// Engine components.
+	Window window;
+	UI UI;
+	Renderer renderer;
+	Resources resources; // Works fine for now, potentially something to refactor.
+    Physics physics;
 
 	// Scene data. - I don't think the engine needs to manage multiple.
     // TODO: Only manage one scene.
-	scene_t scene;
+	Scene scene;
 
     // TODO: Stuff like this is private?
 
-	// engine_t settings
+	// Engine settings
 	int running;
 
 	// TODO: Move these somewhere?
-    input_mode_t input_mode;
+    InputMode input_mode;
 	float upscaling_factor;
 
 	// TODO: Allow the user to set callbacks just like the window class.
 
-} engine_t;
+} Engine;
 
 // Main API
-status_t engine_init(engine_t* engine, int window_width, int window_height);
+Status engine_init(Engine* engine, int window_width, int window_height);
 
-void engine_run(engine_t* engine);
+void engine_run(Engine* engine);
 
-void engine_destroy(engine_t* engine);
+void engine_destroy(Engine* engine);
 
 // Public engine events that the game should define.
-void engine_on_init(engine_t* engine);
+void engine_on_init(Engine* engine);
 
-void engine_before_physics(engine_t* engine, float dt);
-void engine_after_physics(engine_t* engine, float physics_alpha);
+void engine_before_physics(Engine* engine, float dt);
+void engine_after_physics(Engine* engine, float physics_alpha);
 
-void engine_on_keyup(engine_t* engine, WPARAM wParam);
+void engine_on_keyup(Engine* engine, WPARAM wParam);
 
-void engine_on_lmbdown(engine_t* engine);
+void engine_on_lmbdown(Engine* engine);
 
 // Internal functions
 
 
 // TODO: Some sort of input handler? Fine here for now.
-void engine_handle_input(engine_t* engine, float dt);
+void engine_handle_input(Engine* engine, float dt);
 
 // Private window events.
 static void engine_on_resize(void* ctx);

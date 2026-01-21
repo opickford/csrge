@@ -16,19 +16,19 @@
 
 #include <cecs/ecs.h>
 
-static void update_collision_mesh_bounding_sphere(collider_t* collider, const mesh_instance_t* mi, const transform_t transform)
+static void update_collision_mesh_bounding_sphere(Collider* collider, const MeshInstance* mi, const Transform transform)
 {
-    const mesh_base_t* mb = collider->shape.mesh.mb;
+    const MeshBase* mb = collider->shape.mesh.mb;
 
     CHDS_VEC_RESERVE(collider->shape.mesh.wsps, mb->num_positions);
 
     // Calculate model matrix.
     // TODO: rotation or direction or eulers?
-    m4_t model_matrix;
+    M4 model_matrix;
     m4_model_matrix(transform.position, transform.rotation, transform.scale, model_matrix);
 
     // Update the centre of the bounding sphere.
-    v4_t world_space_centre;
+    V4 world_space_centre;
     m4_mul_v4(
         model_matrix,
         v3_to_v4(mb->centre, 1.f),
@@ -40,8 +40,8 @@ static void update_collision_mesh_bounding_sphere(collider_t* collider, const me
     // Convert object space positions to world space.
     for (int j = 0; j < mb->num_positions; ++j)
     {
-        const v4_t osp = v3_to_v4(mb->object_space_positions[j], 1.f);
-        v4_t wsp;
+        const V4 osp = v3_to_v4(mb->object_space_positions[j], 1.f);
+        V4 wsp;
         m4_mul_v4(model_matrix, osp, &wsp);
 
         collider->shape.mesh.wsps[j].x = wsp.x;
@@ -57,16 +57,16 @@ static void update_collision_mesh_bounding_sphere(collider_t* collider, const me
         return;
     }
 
-    bounding_sphere_t* bs = &collider->shape.bs;
-    v3_t centre = bs->centre;
+    BoundingSphere* bs = &collider->shape.bs;
+    V3 centre = bs->centre;
 
     // Calculate the new radius of the mi's bounding sphere.
     float radius_squared = -1;
 
     for (int j = 0; j < mb->num_positions; ++j)
     {
-        v3_t v = collider->shape.mesh.wsps[j];
-        v3_t between = v3_sub_v3(v, centre);
+        V3 v = collider->shape.mesh.wsps[j];
+        V3 between = v3_sub_v3(v, centre);
 
         radius_squared = max(v3_size_sqrd(between), radius_squared);
     }
@@ -76,21 +76,21 @@ static void update_collision_mesh_bounding_sphere(collider_t* collider, const me
     collider->shape.scale_dirty = 0;
 }
 
-static void update_colliders(physics_t* physics, scene_t* scene)
+static void update_colliders(Physics* physics, Scene* scene)
 {
     // TODO: Eventually we might want specific collision meshes to simplify it?
     // TODO: E.g. we don't need the higher detail meshes to collide with, but not needed for now.
     cecs_view_iter it = cecs_view_iter_create(physics->ecs, physics->colliders_view);
     while (cecs_view_iter_next(&it))
     {
-        const transform_t* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
-        const mesh_instance_t* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
-        collider_t* colliders = cecs_get_column(it, COMPONENT_COLLIDER);
+        const Transform* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
+        const MeshInstance* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
+        Collider* colliders = cecs_get_column(it, COMPONENT_COLLIDER);
 
         // Update world space positions of entity, update centre of bounding sphere.
         for (uint32_t i = 0; i < it.num_entities; ++i)
         {
-            collider_t* collider = &colliders[i];
+            Collider* collider = &colliders[i];
 
             // TODO: Where can we actually set this?????? after appling forces???
             //if (!collider->shape.dirty)
@@ -102,9 +102,9 @@ static void update_colliders(physics_t* physics, scene_t* scene)
             {
             case COLLISION_SHAPE_MESH:
             {
-                const transform_t transform = transforms[i];
-                const mesh_instance_t* mi = &mis[i];
-                const mesh_base_t* mb = &scene->mesh_bases.bases[mi->mb_id];
+                const Transform transform = transforms[i];
+                const MeshInstance* mi = &mis[i];
+                const MeshBase* mb = &scene->mesh_bases.bases[mi->mb_id];
 
                 collider->shape.mesh.mb = mb;
                 update_collision_mesh_bounding_sphere(collider, mi, transform);
@@ -112,7 +112,7 @@ static void update_colliders(physics_t* physics, scene_t* scene)
             }
             case COLLISION_SHAPE_ELLIPSOID:
             {
-                const transform_t transform = transforms[i];
+                const Transform transform = transforms[i];
                 collider->shape.bs.centre = transform.position;
 
                 // TODO: not sure if this is really correct, could do for now.
@@ -130,7 +130,7 @@ static void update_colliders(physics_t* physics, scene_t* scene)
     }
 }
 
-static void broad_phase(physics_t* physics, scene_t* scene)
+static void broad_phase(Physics* physics, Scene* scene)
 {
     // Broad phase is purely bounding sphere tests
     // TODO: not ideal if the narrow phase is a sphere, but obv not an issue for now.
@@ -171,14 +171,14 @@ static void broad_phase(physics_t* physics, scene_t* scene)
     cecs_view_iter it = cecs_view_iter_create(physics->ecs, physics->moving_colliders_view);
     while (cecs_view_iter_next(&it))
     {
-        physics_data_t* physics_datas = cecs_get_column(it, COMPONENT_PHYSICS_DATA);
-        transform_t* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
-        const mesh_instance_t* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
-        const collider_t* colliders = cecs_get_column(it, COMPONENT_COLLIDER);
+        PhysicsData* physics_datas = cecs_get_column(it, COMPONENT_PHYSICS_DATA);
+        Transform* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
+        const MeshInstance* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
+        const Collider* colliders = cecs_get_column(it, COMPONENT_COLLIDER);
 
         for (uint32_t i = 0; i < it.num_entities; ++i)
         {
-            physics_data_t* physics_data = &physics_datas[i];
+            PhysicsData* physics_data = &physics_datas[i];
 
             // TODO: Because of testing only past the current moving entity,
             //       we cannot have this check as it means a static mesh
@@ -192,10 +192,10 @@ static void broad_phase(physics_t* physics, scene_t* scene)
                 continue;
             }*/
 
-            transform_t* transform = &transforms[i];
-            const mesh_instance_t* mi = &mis[i];
-            const mesh_base_t* mb = &scene->mesh_bases.bases[mi->mb_id];
-            const collider_t* collider = &colliders[i];
+            Transform* transform = &transforms[i];
+            const MeshInstance* mi = &mis[i];
+            const MeshBase* mb = &scene->mesh_bases.bases[mi->mb_id];
+            const Collider* collider = &colliders[i];
 
             // Iterate from the current entity, will this work????
             // TODO: This might not work if we don't resolve collisions
@@ -206,29 +206,29 @@ static void broad_phase(physics_t* physics, scene_t* scene)
             // Check each remaining moving entity
             do
             {
-                const mesh_instance_t* mis1 = cecs_get_column(it_from_it0, COMPONENT_MESH_INSTANCE);
-                const collider_t* colliders1 = cecs_get_column(it_from_it0, COMPONENT_COLLIDER);
-                physics_data_t* physics_datas1 = cecs_get_column(it_from_it0, COMPONENT_PHYSICS_DATA);
-                transform_t* transforms1 = cecs_get_column(it_from_it0, COMPONENT_TRANSFORM);
+                const MeshInstance* mis1 = cecs_get_column(it_from_it0, COMPONENT_MESH_INSTANCE);
+                const Collider* colliders1 = cecs_get_column(it_from_it0, COMPONENT_COLLIDER);
+                PhysicsData* physics_datas1 = cecs_get_column(it_from_it0, COMPONENT_PHYSICS_DATA);
+                Transform* transforms1 = cecs_get_column(it_from_it0, COMPONENT_TRANSFORM);
 
                 // Start past current entity
                 for (uint32_t j = i + 1; j < it_from_it0.num_entities; ++j)
                 {
-                    const mesh_instance_t* mi1 = &mis1[j];
+                    const MeshInstance* mi1 = &mis1[j];
 
                     // TODO: Cannot collide with self for now, leave this as reminder
                     //       until the logic is validated.
                     // Don't collide with self.
                     //if (mi1 == mi) continue;
 
-                    const collider_t* collider1 = &colliders1[j];
-                    transform_t* transform1 = &transforms1[j];
+                    const Collider* collider1 = &colliders1[j];
+                    Transform* transform1 = &transforms1[j];
 
                     // Account for entity1's velocity.
-                    physics_data_t* physics_data1 = &physics_datas1[j];
+                    PhysicsData* physics_data1 = &physics_datas1[j];
 
-                    bounding_sphere_t bs0 = collider->shape.bs;
-                    const bounding_sphere_t bs1 = collider1->shape.bs;
+                    BoundingSphere bs0 = collider->shape.bs;
+                    const BoundingSphere bs1 = collider1->shape.bs;
 
                     // Test for overlap.
                     const float dist = v3_size_sqrd(v3_sub_v3(bs1.centre, bs0.centre));
@@ -236,7 +236,7 @@ static void broad_phase(physics_t* physics, scene_t* scene)
 
                     if (dist <= n)
                     {
-                        potential_collision_t pc = {
+                        PotentialCollision pc = {
                             .c0 = collider,
                             .mi0 = mi,
                             .pd0 = physics_data,
@@ -258,19 +258,19 @@ static void broad_phase(physics_t* physics, scene_t* scene)
 
             while (cecs_view_iter_next(&sc_it))
             {
-                const mesh_instance_t* mis1 = cecs_get_column(sc_it, COMPONENT_MESH_INSTANCE);
-                const collider_t* colliders1 = cecs_get_column(sc_it, COMPONENT_COLLIDER);
-                const transform_t* transforms1 = cecs_get_column(sc_it, COMPONENT_TRANSFORM);
+                const MeshInstance* mis1 = cecs_get_column(sc_it, COMPONENT_MESH_INSTANCE);
+                const Collider* colliders1 = cecs_get_column(sc_it, COMPONENT_COLLIDER);
+                const Transform* transforms1 = cecs_get_column(sc_it, COMPONENT_TRANSFORM);
 
                 // Start past current entity
                 for (uint32_t j = 0; j < sc_it.num_entities; ++j)
                 {
-                    mesh_instance_t* mi1 = &mis1[j];
-                    const collider_t* collider1 = &colliders1[j];
-                    transform_t* transform1 = &transforms1[j];
+                    MeshInstance* mi1 = &mis1[j];
+                    const Collider* collider1 = &colliders1[j];
+                    Transform* transform1 = &transforms1[j];
 
-                    bounding_sphere_t bs0 = collider->shape.bs;
-                    const bounding_sphere_t bs1 = collider1->shape.bs;
+                    BoundingSphere bs0 = collider->shape.bs;
+                    const BoundingSphere bs1 = collider1->shape.bs;
 
                     // Test for overlap.
                     const float dist = v3_size_sqrd(v3_sub_v3(bs1.centre, bs0.centre));
@@ -278,7 +278,7 @@ static void broad_phase(physics_t* physics, scene_t* scene)
 
                     if (dist <= n)
                     {
-                        potential_collision_t pc = {
+                        PotentialCollision pc = {
                             .c0 = collider,
                             .mi0 = mi,
                             .pd0 = physics_data,
@@ -297,17 +297,17 @@ static void broad_phase(physics_t* physics, scene_t* scene)
     }
 }
 
-static void resolve_single_collision(v3_t collision_normal, float penetration_depth, physics_data_t* a_pd, physics_data_t* b_pd, transform_t* a_t, transform_t* b_t,
+static void resolve_single_collision(V3 collision_normal, float penetration_depth, PhysicsData* a_pd, PhysicsData* b_pd, Transform* a_t, Transform* b_t,
     float e, float mu)
 {
     const float a_mass = a_pd ? a_pd->mass : 0.f;
     const float b_mass = b_pd ? b_pd->mass : 0.f;
 
     // Must recalculate relative velocity here so it is updated from any previous collisions.
-    const v3_t a_vel = a_pd ? a_pd->velocity : v3_uniform(0.f);
-    const v3_t b_vel = b_pd ? b_pd->velocity : v3_uniform(0.f);
+    const V3 a_vel = a_pd ? a_pd->velocity : v3_uniform(0.f);
+    const V3 b_vel = b_pd ? b_pd->velocity : v3_uniform(0.f);
 
-    v3_t rel_vel = v3_sub_v3(a_vel, b_vel);
+    V3 rel_vel = v3_sub_v3(a_vel, b_vel);
     
     // Resolve a collision between objects A and B.
     const float slop = 0; // TODO: Do we want slop? This is actually stopping us from separating fully right????
@@ -325,7 +325,7 @@ static void resolve_single_collision(v3_t collision_normal, float penetration_de
     if (total_inv_mass <= 0.f) return;
 
     // Separate objects.
-    v3_t correction = v3_mul_f(collision_normal, penetration_depth / total_inv_mass);
+    V3 correction = v3_mul_f(collision_normal, penetration_depth / total_inv_mass);
 
     v3_add_eq_v3(&a_t->position, v3_mul_f(correction, a_inv_mass));
     v3_sub_eq_v3(&b_t->position, v3_mul_f(correction, b_inv_mass));
@@ -340,10 +340,10 @@ static void resolve_single_collision(v3_t collision_normal, float penetration_de
     float j = -(1.f + e) * vel_along_n;
     j /= total_inv_mass;
 
-    v3_t normal_impulse = v3_mul_f(collision_normal, j);
+    V3 normal_impulse = v3_mul_f(collision_normal, j);
 
     // Tangential impulse, apply Coulomb friction.
-    v3_t tangent = v3_sub_v3(rel_vel, v3_mul_f(collision_normal, dot(collision_normal, rel_vel)));
+    V3 tangent = v3_sub_v3(rel_vel, v3_mul_f(collision_normal, dot(collision_normal, rel_vel)));
     const float size = v3_size(tangent);
     if (size > 0.f) v3_mul_eq_f(&tangent, 1.f / size);
 
@@ -358,10 +358,10 @@ static void resolve_single_collision(v3_t collision_normal, float penetration_de
     if (jt < -max_friction) jt = -max_friction;
     else if (jt > max_friction) jt = max_friction;
 
-    v3_t friction_impulse = v3_mul_f(tangent, jt);
+    V3 friction_impulse = v3_mul_f(tangent, jt);
 
     // Apply impulses.
-    v3_t total_impulse = v3_add_v3(normal_impulse, friction_impulse);
+    V3 total_impulse = v3_add_v3(normal_impulse, friction_impulse);
 
     if (a_pd)
     {
@@ -383,7 +383,7 @@ static void resolve_single_collision(v3_t collision_normal, float penetration_de
     }*/
 }
 
-static void unit_sphere_tri_edge_collision(v3_t p0, v3_t p1, v3_t centre, uint8_t* collided, v3_t* collision_point, float* penetration_depth)
+static void unit_sphere_tri_edge_collision(V3 p0, V3 p1, V3 centre, uint8_t* collided, V3* collision_point, float* penetration_depth)
 {
     // Essentially performing ray triangle collision but between t0 and t1,
     // the start and ends of the line.
@@ -457,12 +457,12 @@ static void unit_sphere_tri_edge_collision(v3_t p0, v3_t p1, v3_t centre, uint8_
 
     */
 
-    v3_t p1p0 = v3_sub_v3(p1, p0);
+    V3 p1p0 = v3_sub_v3(p1, p0);
     float t = dot(p1p0, v3_sub_v3(centre, p0)) / dot(p1p0, p1p0);
 
     if (t >= 0 && t <= 1)
     {
-        v3_t tmp_collision_point = v3_add_v3(p0, v3_mul_f(p1p0, t));
+        V3 tmp_collision_point = v3_add_v3(p0, v3_mul_f(p1p0, t));
 
         if (v3_size_sqrd(v3_sub_v3(tmp_collision_point, centre)) <= 1.f)
         {
@@ -479,7 +479,7 @@ static void unit_sphere_tri_edge_collision(v3_t p0, v3_t p1, v3_t centre, uint8_
     }
 }
 
-static void unit_sphere_tri_vertex_collision(v3_t p, v3_t centre, uint8_t* collided, v3_t* collision_point, float* penetration_depth)
+static void unit_sphere_tri_vertex_collision(V3 p, V3 centre, uint8_t* collided, V3* collision_point, float* penetration_depth)
 {
     // If distance between vertex and sphere centre is less than radius, we are colliding.
     float d = v3_size_sqrd(v3_sub_v3(p, centre));
@@ -500,7 +500,7 @@ static void unit_sphere_tri_vertex_collision(v3_t p, v3_t centre, uint8_t* colli
     }
 }
 
-static void narrow_ellipsoid_vs_mi(physics_t* physics, scene_t* scene, potential_collision_t pc)
+static void narrow_ellipsoid_vs_mi(Physics* physics, Scene* scene, PotentialCollision pc)
 {
     // Inspired from: https://www.peroxide.dk/papers/collision/collision.pdf
 
@@ -511,31 +511,31 @@ static void narrow_ellipsoid_vs_mi(physics_t* physics, scene_t* scene, potential
     //       Not really sure how to go about that but can solve it when needed? ^^^
     // TODO: Assert in broad phase to ensure this doesn't happen?
 
-    physics_data_t* mi_pd = pc.pd1;
-    transform_t* mi_transform = pc.t1;
-    v3_t mi_vel = mi_pd ? mi_pd->velocity : v3_uniform(0.f);
+    PhysicsData* mi_pd = pc.pd1;
+    Transform* mi_transform = pc.t1;
+    V3 mi_vel = mi_pd ? mi_pd->velocity : v3_uniform(0.f);
 
     // c0 is ellipsoid collider !
-    collider_t* ellipsoid_collider = pc.c0;
-    physics_data_t* ellipsoid_pd = pc.pd0;
-    transform_t* ellipsoid_transform = pc.t0;
-    v3_t e_pos = ellipsoid_transform->position;
+    Collider* ellipsoid_collider = pc.c0;
+    PhysicsData* ellipsoid_pd = pc.pd0;
+    Transform* ellipsoid_transform = pc.t0;
+    V3 e_pos = ellipsoid_transform->position;
 
-    v3_t ellipsoid = ellipsoid_collider->shape.ellipsoid;
-    v3_t inv_ellipsoid = v3_inv(ellipsoid);
+    V3 ellipsoid = ellipsoid_collider->shape.ellipsoid;
+    V3 inv_ellipsoid = v3_inv(ellipsoid);
 
     // TODO: Rename vars and tidy this all up.
 
     // Calculate relative velocity between objects.
-    v3_t vel = v3_sub_v3(ellipsoid_pd->velocity, mi_vel);
+    V3 vel = v3_sub_v3(ellipsoid_pd->velocity, mi_vel);
 
-    v3_t e_start_pos = e_pos;
+    V3 e_start_pos = e_pos;
     v3_mul_eq_v3(&e_start_pos, inv_ellipsoid);
 
-    collider_t* mi_collider = pc.c1;
+    Collider* mi_collider = pc.c1;
 
-    const mesh_base_t* mb = mi_collider->shape.mesh.mb;
-    v3_t* wsps = mi_collider->shape.mesh.wsps;
+    const MeshBase* mb = mi_collider->shape.mesh.mb;
+    V3* wsps = mi_collider->shape.mesh.wsps;
 
     // TODO: Rneame stuff.
 
@@ -544,16 +544,16 @@ static void narrow_ellipsoid_vs_mi(physics_t* physics, scene_t* scene, potential
     // fully out of the triangle!
     for (int i = 0; i < mb->num_faces * 3; i += 3)
     {
-        v3_t p0 = wsps[mb->position_indices[i]];
-        v3_t p1 = wsps[mb->position_indices[i + 1]];
-        v3_t p2 = wsps[mb->position_indices[i + 2]];
+        V3 p0 = wsps[mb->position_indices[i]];
+        V3 p1 = wsps[mb->position_indices[i + 1]];
+        V3 p2 = wsps[mb->position_indices[i + 2]];
 
         // Convert into ellipsoid space
         v3_mul_eq_v3(&p0, inv_ellipsoid);
         v3_mul_eq_v3(&p1, inv_ellipsoid);
         v3_mul_eq_v3(&p2, inv_ellipsoid);
 
-        plane_t tri_plane = plane_from_points(p0, p1, p2);
+        Plane tri_plane = plane_from_points(p0, p1, p2);
 
         // Backface culling, velocity and normal should face towards each other!
         // dot(A,B) = |A||B|cos(theta), note, we only care about sign.
@@ -564,14 +564,14 @@ static void narrow_ellipsoid_vs_mi(physics_t* physics, scene_t* scene, potential
         float dist = fabsf(D);
 
         uint8_t collided = 0;
-        v3_t collision_point = { 0 };
+        V3 collision_point = { 0 };
 
         float penetration_depth = 0;
 
         // Test unit sphere with triangle plane.
         if (dist <= 1.f)
         {
-            v3_t plane_collision_point = v3_sub_v3(e_start_pos, v3_mul_f(tri_plane.normal, D));
+            V3 plane_collision_point = v3_sub_v3(e_start_pos, v3_mul_f(tri_plane.normal, D));
 
             if (point_in_triangle(plane_collision_point, p0, p1, p2))
             {
@@ -593,17 +593,17 @@ static void narrow_ellipsoid_vs_mi(physics_t* physics, scene_t* scene, potential
 
         if (collided)
         {
-            v3_t actual_plane_collision_point = v3_mul_v3(collision_point, ellipsoid);
+            V3 actual_plane_collision_point = v3_mul_v3(collision_point, ellipsoid);
 
-            v3_t collision_normal = v3_sub_v3(ellipsoid_transform->position, actual_plane_collision_point);
+            V3 collision_normal = v3_sub_v3(ellipsoid_transform->position, actual_plane_collision_point);
             v3_normalise(&collision_normal);
 
-            v3_t n = v3_add_v3(collision_point, collision_normal);
+            V3 n = v3_add_v3(collision_point, collision_normal);
             v3_mul_eq_v3(&n, ellipsoid);
 
             float dist = v3_size(v3_sub_v3(n, e_pos));
 
-            collision_data_t cd = { 0 };
+            CollisionData cd = { 0 };
             cd.collision_normal = collision_normal;
             cd.hit = 1;
             cd.penetration_depth = penetration_depth;
@@ -613,37 +613,37 @@ static void narrow_ellipsoid_vs_mi(physics_t* physics, scene_t* scene, potential
     }
 }
 
-static void narrow_sphere_vs_sphere(physics_t* physics, scene_t* scene, potential_collision_t pc)
+static void narrow_sphere_vs_sphere(Physics* physics, Scene* scene, PotentialCollision pc)
 {
     // NOTE: Currently this means they must already collide as the broad phase is 
     //       sphere vs sphere.
 
     // We are just treating ellipsoids as spheres here.
 
-    v3_t a_pos = pc.t0->position;
-    v3_t b_pos = pc.t1->position;
+    V3 a_pos = pc.t0->position;
+    V3 b_pos = pc.t1->position;
 
-    v3_t a_ellipsoid = pc.c0->shape.ellipsoid;
-    v3_t b_ellipsoid = pc.c1->shape.ellipsoid;
+    V3 a_ellipsoid = pc.c0->shape.ellipsoid;
+    V3 b_ellipsoid = pc.c1->shape.ellipsoid;
 
     // Approximate ellipsoid with sphere.
     float a_radius = max(a_ellipsoid.x, max(a_ellipsoid.y, a_ellipsoid.z));
     float b_radius = max(b_ellipsoid.x, max(b_ellipsoid.y, b_ellipsoid.z));
 
-    v3_t a_vel = pc.pd0 ? pc.pd0->velocity : v3_uniform(0.f);
-    v3_t b_vel = pc.pd1 ? pc.pd1->velocity : v3_uniform(0.f);
+    V3 a_vel = pc.pd0 ? pc.pd0->velocity : v3_uniform(0.f);
+    V3 b_vel = pc.pd1 ? pc.pd1->velocity : v3_uniform(0.f);
 
-    v3_t rel_v = v3_sub_v3(a_vel, b_vel);
-    v3_t rel_p = v3_sub_v3(a_pos, b_pos);
+    V3 rel_v = v3_sub_v3(a_vel, b_vel);
+    V3 rel_p = v3_sub_v3(a_pos, b_pos);
 
-    v3_t n = v3_normalised(rel_p);
+    V3 n = v3_normalised(rel_p);
 
-    v3_t a_deepest = v3_add_v3(a_pos, v3_mul_f(n, -a_radius));
-    v3_t b_deepest = v3_add_v3(b_pos, v3_mul_f(n, b_radius));
+    V3 a_deepest = v3_add_v3(a_pos, v3_mul_f(n, -a_radius));
+    V3 b_deepest = v3_add_v3(b_pos, v3_mul_f(n, b_radius));
 
     float penetration_depth = v3_size(v3_sub_v3(a_deepest, b_deepest));
 
-    collision_data_t cd = { 0 };
+    CollisionData cd = { 0 };
     cd.penetration_depth = penetration_depth;
     cd.collision_normal = n;
     cd.hit = 1;
@@ -652,25 +652,25 @@ static void narrow_sphere_vs_sphere(physics_t* physics, scene_t* scene, potentia
     CHDS_VEC_PUSH_BACK(physics->frame.collisions, cd);
 }
 
-static void narrow_phase(physics_t* physics, scene_t* scene)
+static void narrow_phase(Physics* physics, Scene* scene)
 {
     CHDS_VEC_CLEAR(physics->frame.collisions);
 
     const int num_potential_collisions = (int)CHDS_VEC_SIZE(physics->frame.potential_collisions);
     for (int i = 0; i < num_potential_collisions; ++i)
     {
-        potential_collision_t pc = physics->frame.potential_collisions[i];
+        PotentialCollision pc = physics->frame.potential_collisions[i];
 
         // Sort shapes ascending so we only have to solve A vs B, never B vs A.
         if (pc.c0->shape.type > pc.c1->shape.type)
         {
-            SWAP(collider_t*, pc.c0, pc.c1);
-            SWAP(mesh_instance_t*, pc.mi0, pc.mi1);
-            SWAP(physics_data_t*, pc.pd0, pc.pd1);
-            SWAP(transform_t*, pc.t0, pc.t1);
+            SWAP(Collider*, pc.c0, pc.c1);
+            SWAP(MeshInstance*, pc.mi0, pc.mi1);
+            SWAP(PhysicsData*, pc.pd0, pc.pd1);
+            SWAP(Transform*, pc.t0, pc.t1);
         }
 
-        collision_data_t cd = { 0 };
+        CollisionData cd = { 0 };
 
         // TODO: Could sort by shape value (int) then only have to have to solve A vs B never B vs A.
         switch (pc.c0->shape.type)
@@ -712,7 +712,7 @@ static void narrow_phase(physics_t* physics, scene_t* scene)
     }
 }
 
-static void resolve_collisions(physics_t* physics, scene_t* scene)
+static void resolve_collisions(Physics* physics, Scene* scene)
 {
     // Currently just iterating through the collisions, seems to handle everything well 
     // enough for now, can refactor this to solve collisions together in the future if 
@@ -721,7 +721,7 @@ static void resolve_collisions(physics_t* physics, scene_t* scene)
 
     for (int i = 0; i < num_collisions; ++i)
     {
-        collision_data_t cd = physics->frame.collisions[i];
+        CollisionData cd = physics->frame.collisions[i];
 
         // Combine coefficients by taking averages.
         float e = max(0.f, (cd.pc.c0->restiution_coeff + cd.pc.c1->restiution_coeff) / 2.f);
@@ -731,7 +731,7 @@ static void resolve_collisions(physics_t* physics, scene_t* scene)
     }
 }
 
-uint8_t handle_collisions(physics_t* physics, scene_t* scene)
+uint8_t handle_collisions(Physics* physics, Scene* scene)
 {
     /*
     Outline:
@@ -757,9 +757,9 @@ uint8_t handle_collisions(physics_t* physics, scene_t* scene)
     return (uint8_t)((int)CHDS_VEC_SIZE(physics->frame.collisions) > 0.f);
 }
 
-void collider_init(collider_t* c)
+void collider_init(Collider* c)
 {
-    memset(c, 0, sizeof(collider_t));
+    memset(c, 0, sizeof(Collider));
     c->shape.dirty = 1;
     c->shape.scale_dirty = 1;
 
@@ -773,7 +773,7 @@ void collider_init(collider_t* c)
     c->shape.type = COLLISION_SHAPE_ELLIPSOID;
 }
 
-void collider_destroy(collider_t* c)
+void collider_destroy(Collider* c)
 {
     switch (c->shape.type)
     {

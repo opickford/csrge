@@ -8,7 +8,7 @@
 #include <stdlib.h>
 
 /*
-void point_light_init(point_light_t* light, v3_t position, v3_t colour, float strength)
+void point_light_init(PointLight* light, V3 position, V3 colour, float strength)
 {
 	const int new_count = point_lights->count + 1;
 
@@ -42,7 +42,7 @@ void point_light_init(point_light_t* light, v3_t position, v3_t colour, float st
 	point_lights->count = new_count;
 
 	// Create a new depth buffer for the new light.
-	depth_buffer_t* temp = realloc(point_lights->depth_maps, (size_t)point_lights->count * sizeof(depth_buffer_t));
+	DepthBuffer* temp = realloc(point_lights->depth_maps, (size_t)point_lights->count * sizeof(DepthBuffer));
 	if (!temp)
 	{
 		log_error("Failed to realloc for point_lights->depth_maps.");
@@ -60,15 +60,15 @@ void point_light_init(point_light_t* light, v3_t position, v3_t colour, float st
 */
 
 
-status_t point_light_init(point_light_t* light)
+Status point_light_init(PointLight* light)
 {
-    memset(light, 0, sizeof(point_light_t));
+    memset(light, 0, sizeof(PointLight));
     light->strength = 1.f;
 
     return STATUS_OK;
 }
 
-void PointLight_destroy(point_light_t* light)
+void PointLight_destroy(PointLight* light)
 {
 }
 

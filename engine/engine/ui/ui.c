@@ -1,28 +1,28 @@
-#include "ui.h"
+#include "UI.h"
 
-status_t ui_init(ui_t* ui, canvas_t* canvas)
+Status UI_init(UI* UI, Canvas* canvas)
 {
-	status_t status = font_init(&ui->font);
+	Status status = font_init(&UI->font);
 	if (STATUS_OK != status)
 	{
 		return status;
 	}
 
-	ui->canvas = canvas;
+	UI->canvas = canvas;
 
 	return STATUS_OK;
 }
 
-void ui_draw(ui_t* ui, float upscaling_factor)
+void UI_draw(UI* UI, float upscaling_factor)
 {
-	for (int i = 0; i < ui->text_count; ++i)
+	for (int i = 0; i < UI->text_count; ++i)
 	{
-		// TODO: text_t needs to be scaled. Or how do I do it not scaled.
-		text_draw(ui->canvas, &ui->text[i], &ui->font, upscaling_factor);
+		// TODO: Text needs to be scaled. Or how do I do it not scaled.
+		text_draw(UI->canvas, &UI->text[i], &UI->font, upscaling_factor);
 	}
 }
 
-void ui_destroy(ui_t* ui)
+void UI_destroy(UI* UI)
 {
 
 }

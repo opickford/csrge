@@ -11,22 +11,22 @@
 // TODO: This should more be storing metadata of the scene, the ecs contains lights and instances etc.
 typedef struct scene
 {
-	mesh_bases_t mesh_bases; // TODO: Should these simply be global? 
+	MeshBases mesh_bases; // TODO: Should these simply be global? 
                           // TODO: Make chds_vec
 
     // TODO: A scene could have a base ambient light, but mesh instances should also be able to!
     //       This will let them glow. This could potentially be per vertex but probably not worth.
-	v3_t ambient_light;
+	V3 ambient_light;
     int bg_colour;
 
-} scene_t;
+} Scene;
 
 // TODO: refactor to remove the 
 
-status_t scene_init(scene_t* scene);
-status_t scene_destroy(scene_t* scene);
+Status scene_init(Scene* scene);
+Status scene_destroy(Scene* scene);
 
-// mesh_base_t API Wrappers
-mesh_base_id_t scene_add_mesh_base(scene_t* scene);
+// MeshBase API Wrappers
+MeshBaseId scene_add_mesh_base(Scene* scene);
 
 #endif

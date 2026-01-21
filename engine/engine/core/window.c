@@ -17,7 +17,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         // Recover the window pointer.
         LPCREATESTRUCT lpcs = (LPCREATESTRUCT)lParam;
-        window_t* window = (window_t*)lpcs->lpCreateParams;
+        Window* window = (Window*)lpcs->lpCreateParams;
 
         if (!window)
         {
@@ -35,7 +35,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     case WM_EXITSIZEMOVE:
     {
-        window_t* window = (window_t*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+        Window* window = (Window*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
 
         // Calculate the new window dimensions.
         RECT rect;
@@ -62,7 +62,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     case WM_KEYUP:
     {
-        window_t* window = (window_t*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+        Window* window = (Window*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
         window->on_keyup(window->ctx, wParam);
 
         break;
@@ -76,7 +76,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         // Use raw input for the mouse, so that we don't have to 
         // reset the mouse position every frame as this consistently
         // took about 1ms, wayyyy too long.
-        window_t* window = (window_t*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+        Window* window = (Window*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
 
         UINT dwSize = 0;
         
@@ -106,7 +106,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     case WM_LBUTTONDOWN:
     {
-        window_t* window = (window_t*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+        Window* window = (Window*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
         window->on_lmbdown(window->ctx);
         break;
     }
@@ -115,10 +115,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-status_t window_init(window_t* window, canvas_t* canvas, void* ctx, int width, int height)
+Status window_init(Window* window, Canvas* canvas, void* ctx, int width, int height)
 {
 	log_info("Initialising the window.");
-	memset(window, 0, sizeof(window_t));
+	memset(window, 0, sizeof(Window));
 
     window->canvas = canvas;
     window->ctx = ctx;
@@ -165,9 +165,9 @@ status_t window_init(window_t* window, canvas_t* canvas, void* ctx, int width, i
 
     // Create the window
     window->hwnd = CreateWindowExA(
-        0,                          // window_t styles, TODO: PASS window_style?
-        CSRGE_WND_CLASS,         // window_t class
-        CSRGE_WND_TITLE,         // window_t caption
+        0,                          // Window styles, TODO: PASS window_style?
+        CSRGE_WND_CLASS,         // Window class
+        CSRGE_WND_TITLE,         // Window caption
         window_style,
 
         // Size and position
@@ -240,7 +240,7 @@ int window_process_messages()
     return TRUE;
 }
 
-void window_display(window_t* window)
+void window_display(Window* window)
 {
     // TODO: I feel like i need the backbuffer swap for fps lower than refresh rate??
 
@@ -287,7 +287,7 @@ void window_display(window_t* window)
     }
 }
 
-void window_destroy(window_t* window)
+void window_destroy(Window* window)
 {
     // TODO: Not sure how necessary this is.
     //DestroyWindow(window->hwnd);

@@ -20,14 +20,14 @@ typedef struct
 {
     float physics_alpha; // Time through the physics step, used for smooth interpolation.
 
-	// transform_t Stage
-	CHDS_VEC(v3_t) view_space_positions;
-    CHDS_VEC(v3_t) view_space_normals;
+	// Transform Stage
+	CHDS_VEC(V3) view_space_positions;
+    CHDS_VEC(V3) view_space_normals;
 
-    CHDS_VEC(v3_t) point_lights_view_space_positions;
+    CHDS_VEC(V3) point_lights_view_space_positions;
 
 	// Broad Phase Frustum Culling
-    CHDS_VEC(mesh_instance_t) visible_mis;
+    CHDS_VEC(MeshInstance) visible_mis;
 	int num_visible_mis;
 	CHDS_VEC(uint8_t) intersected_planes;
 
@@ -49,7 +49,7 @@ typedef struct
 
     // TODO: Refactoring this so it's not just float arrays.
 	
-    CHDS_VEC(v3_t) vertex_lighting;
+    CHDS_VEC(V3) vertex_lighting;
 
 	// Clipping
     CHDS_VEC(float) faces_to_clip;  // Input to clip.
@@ -60,17 +60,17 @@ typedef struct
     CHDS_VEC(float) temp_clipped_faces0; 
     CHDS_VEC(float) temp_clipped_faces1;
 
-} frame_data_t;
+} FrameData;
 
-status_t frame_data_init(
+Status frame_data_init(
     cecs* ecs, 
     cecs_view_id render_view, 
     cecs_view_id lighting_view, 
-    frame_data_t* frame_data, 
-    scene_t* scene);
+    FrameData* frame_data, 
+    Scene* scene);
 
 
-void frame_data_destroy(frame_data_t* frame_data);
+void frame_data_destroy(FrameData* frame_data);
 
 
 #endif

@@ -11,11 +11,11 @@
 #include <cecs/ecs.h>
 
 #define CORE_COMPONENTS_LIST          \
-    X(MESH_INSTANCE, mesh_instance_t) \
-    X(POINT_LIGHT, point_light_t)     \
-    X(TRANSFORM, transform_t)         \
-    X(PHYSICS_DATA, physics_data_t)   \
-    X(COLLIDER, collider_t)
+    X(MESH_INSTANCE, MeshInstance) \
+    X(POINT_LIGHT, PointLight)     \
+    X(TRANSFORM, Transform)         \
+    X(PHYSICS_DATA, PhysicsData)   \
+    X(COLLIDER, Collider)
 
 #define X(name, T) cecs_component_id COMPONENT_##name;
     CORE_COMPONENTS_LIST
