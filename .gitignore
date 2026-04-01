@@ -1,5 +1,7 @@
-.vs
-res
-out
-build
-engine/libs
+.vs/
+.vscode/
+res/
+out/
+build/
+engine/libs/
+CMakeUserPresets.json
