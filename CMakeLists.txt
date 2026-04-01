@@ -5,6 +5,10 @@ cmake_minimum_required (VERSION 3.11)
 
 project ("game" C)
 
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+
 # Compile options.
 add_compile_options(/TC) # Compile to C.
 add_compile_options(/W3) # Enable max warnings. TODO: Switch to W4.
