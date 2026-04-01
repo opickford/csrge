@@ -65,8 +65,8 @@ typedef struct
 
 typedef struct
 {
-    CHDS_VEC(PotentialCollision) potential_collisions;
-    CHDS_VEC(CollisionData) collisions;
+    CHDS_Vec(PotentialCollision) potential_collisions;
+    CHDS_Vec(CollisionData) collisions;
 
 } PhysicsFrame;
 

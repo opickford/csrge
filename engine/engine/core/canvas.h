@@ -10,7 +10,7 @@
 typedef struct
 {
 	int width, height;
-	CHDS_VEC(uint32_t) pixels;
+	CHDS_Vec(uint32_t) pixels;
 
 } Canvas;
 

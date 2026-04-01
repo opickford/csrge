@@ -27,15 +27,15 @@ typedef enum input_mode
 
 typedef struct
 {
-    cecs* ecs;
+    CECS* ecs;
 
     // TODO: Defining these in the engine struct feels awful, should be a static?
-    cecs_view_id render_view_id;
-    cecs_view_id lighting_view_id;
-    cecs_view_id physics_view_id;
+    CECS_ViewId render_view_id;
+    CECS_ViewId lighting_view_id;
+    CECS_ViewId physics_view_id;
 
-    cecs_view_id moving_collider_view_id;
-    cecs_view_id static_collider_view_id;
+    CECS_ViewId moving_collider_view_id;
+    CECS_ViewId static_collider_view_id;
 
 	// Engine components.
 	Window window;

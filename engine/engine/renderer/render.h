@@ -32,8 +32,8 @@
 
 void debug_draw_point_lights(
     Canvas* canvas,
-    const cecs* ecs,
-    const cecs_view_id lighting_view,
+    const CECS* ecs,
+    const CECS_ViewId lighting_view,
     const FrameData* frame_data,
     const RenderSettings* settings
 );
@@ -86,23 +86,23 @@ void project(const Canvas* canvas, const M4 projection_matrix, V4 v, V4* out);
 
 // REFACTORED PIPELINE
 
-void model_to_view_space(cecs* ecs, cecs_view_id render_view, FrameData* frame_data, Scene* scene, const M4 view_matrix);
-void lights_world_to_view_space(cecs* ecs, cecs_view_id lighting_view, FrameData* frame_data, const Scene* scene, const M4 view_matrix);
-void broad_phase_frustum_culling(cecs* ecs, cecs_view_id render_view, FrameData* frame_data, Scene* scene, const ViewFrustum* view_frustum);
-void cull_backfaces(cecs* ecs, cecs_view_id render_view, FrameData* frame_data, Scene* scene);
+void model_to_view_space(CECS* ecs, CECS_ViewId render_view, FrameData* frame_data, Scene* scene, const M4 view_matrix);
+void lights_world_to_view_space(CECS* ecs, CECS_ViewId lighting_view, FrameData* frame_data, const Scene* scene, const M4 view_matrix);
+void broad_phase_frustum_culling(CECS* ecs, CECS_ViewId render_view, FrameData* frame_data, Scene* scene, const ViewFrustum* view_frustum);
+void cull_backfaces(CECS* ecs, CECS_ViewId render_view, FrameData* frame_data, Scene* scene);
 
 void light_front_faces(
-    cecs* ecs, 
-    cecs_view_id render_view, 
-    cecs_view_id lighting_view, 
+    CECS* ecs, 
+    CECS_ViewId render_view, 
+    CECS_ViewId lighting_view, 
     FrameData* frame_data, 
     Scene* scene, 
     const V3 ambient
 );
 
-void prepare_for_clipping(cecs* ecs, cecs_view_id render_view, FrameData* frame_data, Scene* scene);
+void prepare_for_clipping(CECS* ecs, CECS_ViewId render_view, FrameData* frame_data, Scene* scene);
 void clip_project_and_draw(
-    cecs_view_id render_view,
+    CECS_ViewId render_view,
 	Renderer* renderer,
 	RenderTarget* rt,
 	FrameData* frame_data,
@@ -124,9 +124,9 @@ void project_and_draw_clipped_textured(
     const Texture* texture);
 
 void render(
-    cecs* ecs,
-    cecs_view_id render_view,
-    cecs_view_id lighting_view,
+    CECS* ecs,
+    CECS_ViewId render_view,
+    CECS_ViewId lighting_view,
     Renderer* renderer,
     Scene* scene,
     const Resources* resources,

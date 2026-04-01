@@ -17,11 +17,11 @@
     X(PHYSICS_DATA, PhysicsData)   \
     X(COLLIDER, Collider)
 
-#define X(name, T) cecs_component_id COMPONENT_##name;
+#define X(name, T) CECS_ComponentId COMPONENT_##name;
     CORE_COMPONENTS_LIST
 #undef X
 
-inline void core_components_init(cecs* ecs)
+inline void core_components_init(CECS* ecs)
 {
     // Register all core engine components.
 #define X(name, T) \

@@ -21,10 +21,10 @@ MeshBaseId monkey_base;
 MeshBaseId bowl_base;
 MeshBaseId terrain_base;
 
-cecs_entity_id map_entity;
-cecs_entity_id monkey_entity;
-cecs_entity_id player_entity;
-cecs_entity_id billboard_entity;
+CECS_EntityId map_entity;
+CECS_EntityId monkey_entity;
+CECS_EntityId player_entity;
+CECS_EntityId billboard_entity;
 
 void create_map(Engine* engine)
 {
@@ -60,7 +60,7 @@ void create_map(Engine* engine)
 
     // Create terrain
     {
-        cecs_entity_id cube_entity = cecs_create_entity(engine->ecs);
+        CECS_EntityId cube_entity = cecs_create_entity(engine->ecs);
         map_entity = cube_entity;
 
         // Add a MeshInstance component.
@@ -154,7 +154,7 @@ void create_map(Engine* engine)
     // MONKEY
     /*
     {
-        cecs_entity_id cube_entity = cecs_create_entity(engine->ecs);
+        CECS_EntityId cube_entity = cecs_create_entity(engine->ecs);
         monkey_entity = cube_entity;
 
         // Add a MeshInstance component.
@@ -262,7 +262,7 @@ void engine_on_keyup(Engine* engine, WPARAM wParam)
 
         const V3 pos = v3_add_v3(camera->position, v3_mul_f(camera->direction, 10.f * (random_float() + 1)));
 
-        cecs_entity_id cube_entity = cecs_create_entity(engine->ecs);
+        CECS_EntityId cube_entity = cecs_create_entity(engine->ecs);
         MeshInstance* mi = cecs_add_component(engine->ecs, cube_entity, COMPONENT_MESH_INSTANCE);
         mesh_instance_init(mi, &scene->mesh_bases.bases[sphere_base]);
         mesh_instance_set_albedo(mi, &scene->mesh_bases.bases[sphere_base], colour);
@@ -295,7 +295,7 @@ void engine_on_keyup(Engine* engine, WPARAM wParam)
         
         const V3 pos = v3_add_v3(camera->position, v3_mul_f(camera->direction, 10.f * (random_float() + 1)));
 
-        cecs_entity_id e = cecs_create_entity(engine->ecs);
+        CECS_EntityId e = cecs_create_entity(engine->ecs);
         PointLight* pl = cecs_add_component(engine->ecs, e, COMPONENT_POINT_LIGHT);
         pl->position = pos;
         pl->colour = colour;
@@ -325,7 +325,7 @@ void engine_on_keyup(Engine* engine, WPARAM wParam)
     }
     case VK_F7:
     {
-        cecs_entity_id cube_entity = cecs_create_entity(engine->ecs);
+        CECS_EntityId cube_entity = cecs_create_entity(engine->ecs);
         map_entity = cube_entity;
 
         // Add a MeshInstance component.
@@ -354,7 +354,7 @@ void engine_on_keyup(Engine* engine, WPARAM wParam)
     {
         for (int i = 0; i < 10; ++i)
         {
-            cecs_entity_id cube_entity = cecs_create_entity(engine->ecs);
+            CECS_EntityId cube_entity = cecs_create_entity(engine->ecs);
             map_entity = cube_entity;
 
             // Add a MeshInstance component.
@@ -404,7 +404,7 @@ void engine_on_lmbdown(Engine* engine)
     Scene* scene = &engine->scene;
 
     // Create an entity
-    cecs_entity_id cube_entity = cecs_create_entity(engine->ecs);
+    CECS_EntityId cube_entity = cecs_create_entity(engine->ecs);
 
     //MeshBase* mb = &scene->mesh_bases.bases[cube_base];
     MeshBase* mb = &scene->mesh_bases.bases[sphere_base];

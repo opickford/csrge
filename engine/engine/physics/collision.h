@@ -19,7 +19,7 @@ typedef enum
 typedef struct
 {
     const MeshBase* mb;
-    CHDS_VEC(V3) wsps;
+    CHDS_Vec(V3) wsps;
 } CollisionMesh;
 
 typedef struct
