@@ -70,14 +70,14 @@ Status mesh_base_from_obj(MeshBase* mb, const char* filename)
 	parse_obj_counts(file, &mb->num_positions, &mb->num_uvs, &mb->num_normals, &mb->num_faces);
 
 	// Allocate the buffers.
-    CHDS_VEC_RESERVE(mb->object_space_positions, mb->num_positions);
-    CHDS_VEC_RESERVE(mb->object_space_normals, mb->num_normals);
-    CHDS_VEC_RESERVE(mb->uvs, mb->num_uvs);
+    chds_vec_reserve(mb->object_space_positions, mb->num_positions);
+    chds_vec_reserve(mb->object_space_normals, mb->num_normals);
+    chds_vec_reserve(mb->uvs, mb->num_uvs);
 
 	const int num_vertices = mb->num_faces * STRIDE_FACE_VERTICES;
-	CHDS_VEC_RESERVE(mb->position_indices, num_vertices);
-	CHDS_VEC_RESERVE(mb->normal_indices, num_vertices);
-	CHDS_VEC_RESERVE(mb->uv_indices, num_vertices);
+	chds_vec_reserve(mb->position_indices, num_vertices);
+	chds_vec_reserve(mb->normal_indices, num_vertices);
+	chds_vec_reserve(mb->uv_indices, num_vertices);
 
 	int positions_offset = 0;
 	int normals_offset = 0;

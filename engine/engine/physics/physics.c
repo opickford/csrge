@@ -45,7 +45,7 @@ static void physics_setup_views(Physics* physics)
         CECS_COMPONENT_ID_TO_BITSET(COMPONENT_PHYSICS_DATA));
 }
 
-Status physics_init(Physics* physics, cecs* ecs)
+Status physics_init(Physics* physics, CECS* ecs)
 {
     memset(physics, 0, sizeof(Physics));
     physics->ecs = ecs;
@@ -71,7 +71,7 @@ static void apply_forces(Physics* physics, float dt)
     // TODO: Define in physics world.
     static const V3 gravity = { 0, -9.8f, 0 };
     
-    cecs_view_iter it = cecs_view_iter_create(physics->ecs, physics->physics_view);
+    CECS_ViewIter it = cecs_view_iter_create(physics->ecs, physics->physics_view);
 
     while (cecs_view_iter_next(&it))
     {
@@ -155,7 +155,7 @@ static void apply_forces(Physics* physics, float dt)
 
 static void apply_velocities(Physics* physics, float dt)
 {
-    cecs_view_iter it = cecs_view_iter_create(physics->ecs, physics->physics_view);
+    CECS_ViewIter it = cecs_view_iter_create(physics->ecs, physics->physics_view);
     while (cecs_view_iter_next(&it))
     {
         PhysicsData* physics_datas = cecs_get_column(it, COMPONENT_PHYSICS_DATA);
@@ -184,8 +184,8 @@ void physics_tick(Physics* physics, Scene* scene, float dt)
 {
     // TODO: TEMP: 
     {
-        cecs_view_id v = cecs_view_create(physics->ecs, CECS_COMPONENT_ID_TO_BITSET(COMPONENT_TRANSFORM), 0);
-        cecs_view_iter it = cecs_view_iter_create(physics->ecs, v);
+        CECS_ViewId v = cecs_view_create(physics->ecs, CECS_COMPONENT_ID_TO_BITSET(COMPONENT_TRANSFORM), 0);
+        CECS_ViewIter it = cecs_view_iter_create(physics->ecs, v);
         while (cecs_view_iter_next(&it))
         {
             Transform* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);

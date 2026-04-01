@@ -38,19 +38,19 @@ typedef struct mesh_base
 	int num_normals;
 	int num_uvs;
 
-	CHDS_VEC(int) position_indices;
-	CHDS_VEC(int) normal_indices;
-    CHDS_VEC(int) uv_indices;
+	CHDS_Vec(int) position_indices;
+	CHDS_Vec(int) normal_indices;
+    CHDS_Vec(int) uv_indices;
 
-    CHDS_VEC(V3) object_space_positions;
-	CHDS_VEC(V3) object_space_normals;
-	CHDS_VEC(V2) uvs; // TODO: Specifiy for textures?
+    CHDS_Vec(V3) object_space_positions;
+	CHDS_Vec(V3) object_space_normals;
+	CHDS_Vec(V2) uvs; // TODO: Specifiy for textures?
 	
 	V3 centre;
 
 } MeshBase;
 
-// TODO: No longer need this, CHDS_VEC(MeshBase)?
+// TODO: No longer need this, CHDS_Vec(MeshBase)?
 typedef struct
 {
 	MeshBase* bases;

@@ -8,7 +8,7 @@
 // TODO: Refactor this script to really make sense, e.g. we can pass in a camera offset.
 uint8_t third_person = 1;
 
-inline void player_controller_physics(Engine* engine, cecs_entity_id eid, float dt)
+inline void player_controller_physics(Engine* engine, CECS_EntityId eid, float dt)
 {
     if (engine->input_mode != INPUT_MODE_GAME) return;
 
@@ -63,7 +63,7 @@ inline void player_controller_physics(Engine* engine, cecs_entity_id eid, float 
     }    
 }
 
-inline void player_controller_camera(Engine* engine, cecs_entity_id eid)
+inline void player_controller_camera(Engine* engine, CECS_EntityId eid)
 {
     if (engine->input_mode != INPUT_MODE_GAME) return;
 

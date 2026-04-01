@@ -18,7 +18,7 @@
 // Internal helpers.
 static void engine_setup_ecs(Engine* engine)
 {
-    cecs* ecs = cecs_create();
+    CECS* ecs = cecs_create();
     engine->ecs = ecs;
 
     // Setup core components, MeshInstance etc.
@@ -254,8 +254,8 @@ void engine_run(Engine* engine)
         // TODO: TEMP: Debugging rendering the velocities.
         if (g_debug_velocities) 
         {    
-            cecs_view_id v = cecs_view_create(engine->ecs, CECS_COMPONENT_ID_TO_BITSET(COMPONENT_TRANSFORM) | CECS_COMPONENT_ID_TO_BITSET(COMPONENT_PHYSICS_DATA), 0);
-            cecs_view_iter it = cecs_view_iter_create(engine->ecs, v);
+            CECS_ViewId v = cecs_view_create(engine->ecs, CECS_COMPONENT_ID_TO_BITSET(COMPONENT_TRANSFORM) | CECS_COMPONENT_ID_TO_BITSET(COMPONENT_PHYSICS_DATA), 0);
+            CECS_ViewIter it = cecs_view_iter_create(engine->ecs, v);
 
             while (cecs_view_iter_next(&it))
             {
@@ -291,8 +291,8 @@ void engine_run(Engine* engine)
         {
             int total_faces = 0;
             int mis_count = 0;
-            const cecs* ecs = engine->ecs;
-            cecs_view_iter it = cecs_view_iter_create(ecs, engine->render_view_id);
+            const CECS* ecs = engine->ecs;
+            CECS_ViewIter it = cecs_view_iter_create(ecs, engine->render_view_id);
             while (cecs_view_iter_next(&it))
             {
                 MeshInstance* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
