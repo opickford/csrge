@@ -3,7 +3,6 @@
 
 # TODO: Fix comments.
 
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/engine/libs")
 find_package(cecs REQUIRED)
 find_package(chds REQUIRED)
 
