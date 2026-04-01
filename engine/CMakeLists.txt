@@ -26,6 +26,13 @@ set_target_properties(engine PROPERTIES FOLDER "Engine")
 
 # TODO: Add tests and install targets if needed.
 
+option(ENGINE_BUILD_TESTS "Build tests" ON)
+
+if (ENGINE_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
 # Install libraries
 # Tell CMake where to find cecsConfig.cmake
 
