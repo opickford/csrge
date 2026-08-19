@@ -464,11 +464,16 @@ static void unit_sphere_tri_edge_collision(V3 p0, V3 p1, V3 centre, uint8_t* col
     {
         V3 tmp_collision_point = v3_add_v3(p0, v3_mul_f(p1p0, t));
 
+        // TODO: TEMP: TESTING, why were we using size_sqrd? that won't give us actual distance?
+        // I think size_sqrd works for the test, but we need the actual distance for the penetration depth
         if (v3_size_sqrd(v3_sub_v3(tmp_collision_point, centre)) <= 1.f)
         {
             // Only return a collision if the distance is greater than the
             // inputted penetration depth.
-            float tmp_penetration_depth = 1.f - v3_size_sqrd(v3_sub_v3(tmp_collision_point, centre));
+
+            // TODO: also we're doing this twice?
+            float dist = v3_size(v3_sub_v3(tmp_collision_point, centre));
+            float tmp_penetration_depth = 1.f - dist;
             if (!*collided || tmp_penetration_depth > *penetration_depth)
             {
                 *collided = 1;
@@ -482,7 +487,11 @@ static void unit_sphere_tri_edge_collision(V3 p0, V3 p1, V3 centre, uint8_t* col
 static void unit_sphere_tri_vertex_collision(V3 p, V3 centre, uint8_t* collided, V3* collision_point, float* penetration_depth)
 {
     // If distance between vertex and sphere centre is less than radius, we are colliding.
-    float d = v3_size_sqrd(v3_sub_v3(p, centre));
+
+    // TODO: why were we using size_sqrd?
+    //float d = v3_size_sqrd(v3_sub_v3(p, centre));
+
+    float d = v3_size(v3_sub_v3(p, centre));
 
     // Choose the point of furthest collision, this should ensure we 
     // push the ellipsoid fully out of the triangle!
@@ -603,11 +612,17 @@ static void narrow_ellipsoid_vs_mi(Physics* physics, Scene* scene, PotentialColl
 
             float dist = v3_size(v3_sub_v3(n, e_pos));
 
+            // TODO: penetration depth is in ellipsoid space.
+            // TODO: TEMP sol? for uniformly scaled sphere
+            penetration_depth *= ellipsoid.x; // Using x as radius here.
+
+
             CollisionData cd = { 0 };
             cd.collision_normal = collision_normal;
             cd.hit = 1;
             cd.penetration_depth = penetration_depth;
             cd.pc = pc;
+            
             chds_vec_push(physics->frame.collisions, cd);
         }
     }

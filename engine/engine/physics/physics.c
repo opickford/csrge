@@ -182,7 +182,7 @@ void physics_data_init(PhysicsData* data)
 
 void physics_tick(Physics* physics, Scene* scene, float dt)
 {
-    // TODO: TEMP: 
+    // TODO: TEMP: updates previous position for smooth lerp.
     {
         CECS_ViewId v = cecs_view_create(physics->ecs, CECS_COMPONENT_ID_TO_BITSET(COMPONENT_TRANSFORM), 0);
         CECS_ViewIter it = cecs_view_iter_create(physics->ecs, v);

@@ -79,6 +79,8 @@ void create_map(Engine* engine)
 
         collider->shape.type = COLLISION_SHAPE_MESH;
 
+        //collider->restiution_coeff = 0.f;
+
         //PhysicsData* pd = cecs_add_component(engine->ecs, cube_entity, COMPONENT_PHYSICS_DATA);
         //physics_data_init(pd);
         //pd->mass = 0.f; // TODO: TEMP: Isn't moved by other things?
@@ -152,6 +154,9 @@ void engine_after_physics(Engine* engine, float physics_alpha)
 
 void engine_on_keyup(Engine* engine, WPARAM wParam)
 {
+    // TODO: rather than this maybe registering callbacks could be a good method.
+    //       can consider this down the line.
+
     switch (wParam)
     {
     case VK_F1:
@@ -327,7 +332,7 @@ void engine_on_lmbdown(Engine* engine)
         COMPONENT_MESH_INSTANCE);
     mesh_instance_init(mi, mb);
 
-
+    // TODO: helper for this.
     V3 colour =
     {
         random_float(),
@@ -342,10 +347,6 @@ void engine_on_lmbdown(Engine* engine)
     transform_init(transform);
     transform->position = v3_add_v3(engine->renderer.camera.position, v3_mul_f(engine->renderer.camera.direction, 3));
     transform->scale = v3_uniform(0.1f);
-
-
-    //transform->scale = v3_uniform(0.1);
-    //transform->scale = (V3){ 0.5f,2,1 };
 
     PhysicsData* physics_data = cecs_add_component(engine->ecs, cube_entity, COMPONENT_PHYSICS_DATA);
     physics_data_init(physics_data);
