@@ -5,6 +5,7 @@
 
 find_package(chds REQUIRED)
 find_package(cecs REQUIRED)
+find_package(caudio REQUIRED)
 
 # Compile the engine as a static .lib to be used by the game/tools.
 add_subdirectory(engine/common)

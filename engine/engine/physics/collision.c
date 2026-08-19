@@ -728,6 +728,9 @@ static void resolve_collisions(Physics* physics, Scene* scene)
         float mu = max(0.f, (cd.pc.c0->friction_coeff + cd.pc.c1->friction_coeff) / 2.f);
 
         resolve_single_collision(cd.collision_normal, cd.penetration_depth, cd.pc.pd0, cd.pc.pd1, cd.pc.t0, cd.pc.t1, e, mu);
+
+        if (cd.pc.c0->on_collision) cd.pc.c0->on_collision();
+        if (cd.pc.c1->on_collision) cd.pc.c1->on_collision();
     }
 }
 

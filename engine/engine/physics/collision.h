@@ -57,6 +57,8 @@ typedef struct collider
     // 0 = no friction, 1 is as much friction as the normal force.
     float friction_coeff;
 
+    void (*on_collision)();
+
 } Collider;
 
 void collider_init(Collider* c);

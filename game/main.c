@@ -12,6 +12,8 @@
 #include <engine/scripts/gameplay/player_controller.h>
 #include <engine/scripts/rendering/billboard.h>
 
+#include <caudio/audio.h>
+
 float* directions;
 
 MeshBaseId sphere_base;
@@ -25,6 +27,9 @@ CECS_EntityId map_entity;
 CECS_EntityId monkey_entity;
 CECS_EntityId player_entity;
 CECS_EntityId billboard_entity;
+
+Audio audio;
+Sound boing;
 
 void create_map(Engine* engine)
 {
@@ -236,6 +241,9 @@ void engine_before_physics(Engine* engine, float dt)
 void engine_after_physics(Engine* engine, float physics_alpha)
 {
     player_controller_camera(engine, player_entity);
+
+    // TODO: TEMP: TESTING
+    audio_tick(&audio);
 }
 
 void engine_on_keyup(Engine* engine, WPARAM wParam)
@@ -399,6 +407,11 @@ void engine_on_keyup(Engine* engine, WPARAM wParam)
     }
 }
 
+void bing()
+{
+    SoundInstance* inst = audio_play(&audio, &boing);
+}
+
 void engine_on_lmbdown(Engine* engine)
 {
     Scene* scene = &engine->scene;
@@ -449,10 +462,21 @@ void engine_on_lmbdown(Engine* engine)
     Collider* collider = cecs_add_component(engine->ecs, cube_entity, COMPONENT_COLLIDER);
     collider_init(collider);
     collider->shape.ellipsoid = transform->scale;
+
+    collider->on_collision = bing;
 }
 
 int main()
 {
+    // TODO: TEMP: TESTING
+    if (!audio_init(&audio))
+    {
+        return -1;
+    }
+
+    Wav boing_wav = ReadWav("C:/Users/olive/source/repos/audio/examples/res/click.wav");
+    boing = sound_from_wav(&boing_wav);
+
 	Engine engine;
 	if (STATUS_OK == engine_init(&engine, 800, 600))
 	{

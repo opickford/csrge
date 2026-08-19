@@ -17,6 +17,7 @@
 
 #include <cecs/ecs.h>
 
+
 typedef enum input_mode
 {
     INPUT_MODE_UI,
