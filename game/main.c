@@ -97,10 +97,12 @@ void create_map(Engine* engine)
 
         mi->texture_id = 1;
 
+        V3 player_scale = (V3) { 1, 2, 1 };
+
         {
             Transform* transform = cecs_add_component(engine->ecs, player_entity, COMPONENT_TRANSFORM);
             transform_init(transform);
-            transform->scale = (V3) { 1, 2, 1 };
+            transform->scale = player_scale;
             transform->position = (V3) { 0, 3, 0 };
         }
 
@@ -108,7 +110,7 @@ void create_map(Engine* engine)
         collider_init(collider);
 
         collider->shape.type = COLLISION_SHAPE_ELLIPSOID;
-        collider->shape.ellipsoid = (V3){ 1,2,1 };
+        collider->shape.ellipsoid = player_scale;
 
         PhysicsData* pd = cecs_add_component(engine->ecs, player_entity, COMPONENT_PHYSICS_DATA);
         physics_data_init(pd);

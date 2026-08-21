@@ -494,7 +494,8 @@ static void unit_sphere_tri_vertex_collision(V3 p, V3 centre, uint8_t* collided,
     float d = v3_size(v3_sub_v3(p, centre));
 
     // Choose the point of furthest collision, this should ensure we 
-    // push the ellipsoid fully out of the triangle!
+    // push the ellipsoid fully out of the triangle! Note, this does
+    // not necessarily mean the first collision.
     if (d < 1.f)
     {
         // Only return a collision if the distance is greater than the
@@ -602,25 +603,29 @@ static void narrow_ellipsoid_vs_mi(Physics* physics, Scene* scene, PotentialColl
 
         if (collided)
         {
-            V3 actual_plane_collision_point = v3_mul_v3(collision_point, ellipsoid);
+            V3 e_collision_normal = v3_normalised(v3_sub_v3(e_start_pos, collision_point));
 
-            V3 collision_normal = v3_sub_v3(ellipsoid_transform->position, actual_plane_collision_point);
-            v3_normalise(&collision_normal);
+            // Normals are defined as perpendicular to a surface, non-uniform scaling doesn't preserve
+            // this if transformed like a normal vector. To transform normals, we use the inverse-transpose
+            // of the scaling matrix, as the scaling is diagonal, in this case we just multiply component-wise
+            // by the inverse of the scale, i.e. divide by the scale.
 
-            V3 n = v3_add_v3(collision_point, collision_normal);
-            v3_mul_eq_v3(&n, ellipsoid);
+            // The normal points from the surface towards the ellipsoid centre as we're wanting to move out
+            // of the surface.
+            V3 w_collision_normal = v3_normalised(v3_mul_v3(e_collision_normal, inv_ellipsoid));
 
-            float dist = v3_size(v3_sub_v3(n, e_pos));
+            // Get the vector that would push the unit sphere out of the triangle and convert to world space.
+            // Note, this is not a normal hence we don't use the inverse-transpose.
+            V3 penetration_vector = v3_mul_v3(v3_mul_f(e_collision_normal, penetration_depth), ellipsoid);
 
-            // TODO: penetration depth is in ellipsoid space.
-            // TODO: TEMP sol? for uniformly scaled sphere
-            penetration_depth *= ellipsoid.x; // Using x as radius here.
-
+            // Non-uniform scaling can change the vector direction, so project the transformed penetration
+            // vector onto the world space collision normal.
+            float depth_world = dot(penetration_vector, w_collision_normal);
 
             CollisionData cd = { 0 };
-            cd.collision_normal = collision_normal;
+            cd.collision_normal = w_collision_normal;
             cd.hit = 1;
-            cd.penetration_depth = penetration_depth;
+            cd.penetration_depth = depth_world;
             cd.pc = pc;
             
             chds_vec_push(physics->frame.collisions, cd);
