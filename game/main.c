@@ -10,21 +10,18 @@
 #include <engine/common/status.h>
 
 #include <engine/scripts/gameplay/player_controller.h>
-#include <engine/scripts/rendering/billboard.h>
 
 float* directions;
 
 MeshBaseId sphere_base;
 MeshBaseId cube_base;
 MeshBaseId map_base;
-MeshBaseId monkey_base;
 MeshBaseId bowl_base;
 MeshBaseId terrain_base;
 
 CECS_EntityId map_entity;
-CECS_EntityId monkey_entity;
 CECS_EntityId player_entity;
-CECS_EntityId billboard_entity;
+CECS_EntityId light_entity;
 
 void create_map(Engine* engine)
 {
@@ -49,9 +46,6 @@ void create_map(Engine* engine)
     map_base = mesh_bases_add(&scene->mesh_bases);
     mesh_base_from_obj(&scene->mesh_bases.bases[map_base], "C:/Users/olive/source/repos/csrge/res/models/physics_test_map.obj");
 
-    monkey_base = mesh_bases_add(&scene->mesh_bases);
-    mesh_base_from_obj(&scene->mesh_bases.bases[monkey_base], "C:/Users/olive/source/repos/csrge/res/models/suzanne.obj");
-
     bowl_base = mesh_bases_add(&scene->mesh_bases);
     mesh_base_from_obj(&scene->mesh_bases.bases[bowl_base], "C:/Users/olive/source/repos/csrge/res/models/bowl.obj");
 
@@ -67,7 +61,7 @@ void create_map(Engine* engine)
         MeshInstance* mi = cecs_add_component(engine->ecs, cube_entity, COMPONENT_MESH_INSTANCE);
         mesh_instance_init(mi, &scene->mesh_bases.bases[terrain_base]);
 
-        mi->texture_id = 0;
+        //mi->texture_id = 0;
 
         {
             Transform* transform = cecs_add_component(engine->ecs, cube_entity, COMPONENT_TRANSFORM);
@@ -85,6 +79,8 @@ void create_map(Engine* engine)
 
         collider->shape.type = COLLISION_SHAPE_MESH;
 
+        //collider->restiution_coeff = 0.f;
+
         //PhysicsData* pd = cecs_add_component(engine->ecs, cube_entity, COMPONENT_PHYSICS_DATA);
         //physics_data_init(pd);
         //pd->mass = 0.f; // TODO: TEMP: Isn't moved by other things?
@@ -101,10 +97,12 @@ void create_map(Engine* engine)
 
         mi->texture_id = 1;
 
+        V3 player_scale = (V3) { 1, 2, 1 };
+
         {
             Transform* transform = cecs_add_component(engine->ecs, player_entity, COMPONENT_TRANSFORM);
             transform_init(transform);
-            transform->scale = (V3) { 1, 2, 1 };
+            transform->scale = player_scale;
             transform->position = (V3) { 0, 3, 0 };
         }
 
@@ -112,89 +110,23 @@ void create_map(Engine* engine)
         collider_init(collider);
 
         collider->shape.type = COLLISION_SHAPE_ELLIPSOID;
-        collider->shape.ellipsoid = (V3){ 1,2,1 };
+        collider->shape.ellipsoid = player_scale;
 
         PhysicsData* pd = cecs_add_component(engine->ecs, player_entity, COMPONENT_PHYSICS_DATA);
         physics_data_init(pd);
         pd->mass = 50.f;
     }
 
-    // Create billboard
+    // Point light
     {
-        billboard_entity = cecs_create_entity(engine->ecs);
-
-        // Add a MeshInstance component.
-        MeshInstance* mi = cecs_add_component(engine->ecs, billboard_entity, COMPONENT_MESH_INSTANCE);
-        mesh_instance_init(mi, &scene->mesh_bases.bases[cube_base]);
-
-        mi->texture_id = 2;
-
-        {
-            Transform* transform = cecs_add_component(engine->ecs, billboard_entity, COMPONENT_TRANSFORM);
-            transform_init(transform);
-            transform->scale = (V3){ 1, 2, 0 };
-            transform->position = (V3){ 5, 3, 0 };
-        }
-
-       
-        Collider* collider = cecs_add_component(engine->ecs, billboard_entity, COMPONENT_COLLIDER);
-        collider_init(collider);
-
-        //collider->shape.type = COLLISION_SHAPE_ELLIPSOID;
-        //collider->shape.ellipsoid = (V3){ 1,2,1 };
-
-        collider->shape.type = COLLISION_SHAPE_MESH;
-
-        /*
-        PhysicsData* pd = cecs_add_component(engine->ecs, billboard_entity, COMPONENT_PHYSICS_DATA);
-        physics_data_init(pd);
-        pd->mass = 50.f;*/
+        light_entity = cecs_create_entity(engine->ecs);
+        PointLight* pl = cecs_add_component(engine->ecs, light_entity, COMPONENT_POINT_LIGHT);
+        pl->position = (V3){ 0, 50, 1 };
+        pl->colour = v3_uniform(1.f);
+        pl->strength = 50.f;
     }
-    
-    // MONKEY
-    /*
-    {
-        CECS_EntityId cube_entity = cecs_create_entity(engine->ecs);
-        monkey_entity = cube_entity;
 
-        // Add a MeshInstance component.
-        MeshInstance* mi = cecs_add_component(engine->ecs, cube_entity, COMPONENT_MESH_INSTANCE);
-        mesh_instance_init(mi, &scene->mesh_bases.bases[monkey_base]);
-
-        mi->texture_id = 0;
-
-        Transform* transform = cecs_add_component(engine->ecs, cube_entity, COMPONENT_TRANSFORM);
-        transform_init(transform);
-        transform->scale = v3_uniform(1);
-
-        // TODO: currently testing with static.
-        //PhysicsData* physics_data = cecs_add_component(engine->ecs, cube_entity, COMPONENT_PHYSICS_DATA);
-        //physics_data_init(physics_data);
-        //physics_data->force = (V3){ 0,0,1 };
-
-        Collider* collider = cecs_add_component(engine->ecs, cube_entity, COMPONENT_COLLIDER);
-        collider_init(collider);
-
-        collider->shape.type = COLLISION_SHAPE_MESH;
-        //collider->shape.ellipsoid = v3_uniform(1.f);
-
-        PhysicsData* pd = cecs_add_component(engine->ecs, cube_entity, COMPONENT_PHYSICS_DATA);
-        physics_data_init(pd);
-    }*/
-  
-
-    /*
-    // TODO: TEMP: Currently setting the spawned cube to have an ellipsoid collider, but this is just for the 
-    //             broad phase which is using the sphere.
-    // Normally to calculate bounding sphere of square we would half the scale, however,
-    // the input .obj goes from -1 to 1, so the length is 2.
-    V3 half_sqrd = v3_mul_v3(transform->scale, transform->scale);
-    float radius = sqrtf(half_sqrd.x + half_sqrd.y + half_sqrd.z);
-    collider->shape.ellipsoid = v3_uniform(radius);
-    printf("%f\n", radius);
-    */
-    scene->ambient_light = v3_uniform(1.f);
-    //scene->ambient_light = v3_uniform(0.1f);
+    scene->ambient_light = v3_uniform(0.3f);
     
     scene->bg_colour = 0x11111111;
     
@@ -214,23 +146,7 @@ void engine_on_init(Engine* engine)
 
 void engine_before_physics(Engine* engine, float dt)
 {
-    {
-        PhysicsData* pd = cecs_get_component(engine->ecs, map_entity, COMPONENT_PHYSICS_DATA);
-        //pd->velocity = (V3){ 0.f, 0.f, -1.f };
-    }
-
-    {
-        PhysicsData* pd = cecs_get_component(engine->ecs, player_entity, COMPONENT_PHYSICS_DATA);
-        Transform* t = cecs_get_component(engine->ecs, player_entity, COMPONENT_TRANSFORM);
-
-        V3 dir = v3_normalised(v3_sub_v3(engine->renderer.camera.position, t->position));
-        
-        //v3_add_eq_v3(&pd->impulses, v3_mul_f(dir, 0.01));
-
-    }
-
     player_controller_physics(engine, player_entity, dt);
-    update_billboard(engine, billboard_entity, dt);
 }
 
 void engine_after_physics(Engine* engine, float physics_alpha)
@@ -240,6 +156,9 @@ void engine_after_physics(Engine* engine, float physics_alpha)
 
 void engine_on_keyup(Engine* engine, WPARAM wParam)
 {
+    // TODO: rather than this maybe registering callbacks could be a good method.
+    //       can consider this down the line.
+
     switch (wParam)
     {
     case VK_F1:
@@ -415,7 +334,7 @@ void engine_on_lmbdown(Engine* engine)
         COMPONENT_MESH_INSTANCE);
     mesh_instance_init(mi, mb);
 
-
+    // TODO: helper for this.
     V3 colour =
     {
         random_float(),
@@ -430,10 +349,6 @@ void engine_on_lmbdown(Engine* engine)
     transform_init(transform);
     transform->position = v3_add_v3(engine->renderer.camera.position, v3_mul_f(engine->renderer.camera.direction, 3));
     transform->scale = v3_uniform(0.1f);
-
-
-    //transform->scale = v3_uniform(0.1);
-    //transform->scale = (V3){ 0.5f,2,1 };
 
     PhysicsData* physics_data = cecs_add_component(engine->ecs, cube_entity, COMPONENT_PHYSICS_DATA);
     physics_data_init(physics_data);

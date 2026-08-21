@@ -218,10 +218,13 @@ void engine_run(Engine* engine)
 
         snprintf(physics_str, sizeof(physics_str), "Physics: %d", timer_get_elapsed(&t));
 
-        // Calculate how far we are through 
+        // Calculate how far we are through the next physics frame?
+        // TODO: how is this right though if the physics system hasn't consumed the movement
+        //       for the remaining dt then why would we use this for the camera?
         engine->renderer.frame_data.physics_alpha = physics_dt_counter / physics_dt;
 
         // Call after physics, e.g. update camera smoothly using physics alpha.
+        // TODO: i don't quite get this anymore, comments should actually explain why not what.
         engine_after_physics(engine, engine->renderer.frame_data.physics_alpha);
         
         // Clear the canvas.
