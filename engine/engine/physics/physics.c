@@ -196,6 +196,7 @@ void physics_tick(Physics* physics, Scene* scene, float dt)
 
                 transform->previous_position = transform->position;
                 transform->previous_rotation = transform->rotation;
+                // TODO: why are we not doing this?
                 //transform->previous_scale = transform->scale;
             }
         }
