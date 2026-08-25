@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 
-typedef struct physics
+typedef struct Physics
 {
     // TODO: Should this contain a scene also?
 
@@ -36,7 +36,7 @@ typedef struct physics
 } Physics;
 
 // TODO: Move to separate file?
-typedef struct physics_data
+typedef struct PhysicsData
 {
     V3 impulses; // Forces applied instantaneously.
     V3 velocity;

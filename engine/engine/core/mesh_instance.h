@@ -28,7 +28,7 @@ TODO: Comments about how this is a component now.
 // TODO: Do we need this.
 typedef int MeshInstanceId; 
 
-typedef struct mesh_instance
+typedef struct MeshInstance
 {
 	MeshBaseId mb_id; // TODO: Rename as base?
 	int texture_id;

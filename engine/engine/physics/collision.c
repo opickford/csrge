@@ -139,7 +139,7 @@ static void broad_phase(Physics* physics, Scene* scene)
     chds_vec_clear(physics->frame.potential_collisions);
 
     // TODO: How can we get the number of entities in a nicer way?
-
+    // TODO: the ECS should just track this for us.
     int num_entities = 0;
     {
         CECS_ViewIter it = cecs_view_iter_create(physics->ecs, physics->colliders_view);
@@ -171,6 +171,7 @@ static void broad_phase(Physics* physics, Scene* scene)
     CECS_ViewIter it = cecs_view_iter_create(physics->ecs, physics->moving_colliders_view);
     while (cecs_view_iter_next(&it))
     {
+        const CECS_EntityId* ids = cecs_get_entity_ids(it);
         PhysicsData* physics_datas = cecs_get_column(it, COMPONENT_PHYSICS_DATA);
         Transform* transforms = cecs_get_column(it, COMPONENT_TRANSFORM);
         const MeshInstance* mis = cecs_get_column(it, COMPONENT_MESH_INSTANCE);
@@ -192,6 +193,7 @@ static void broad_phase(Physics* physics, Scene* scene)
                 continue;
             }*/
 
+            CECS_EntityId eid = ids[i];
             Transform* transform = &transforms[i];
             const MeshInstance* mi = &mis[i];
             const MeshBase* mb = &scene->mesh_bases.bases[mi->mb_id];
@@ -206,6 +208,7 @@ static void broad_phase(Physics* physics, Scene* scene)
             // Check each remaining moving entity
             do
             {
+                const CECS_EntityId* ids1 = cecs_get_entity_ids(it_from_it0);
                 const MeshInstance* mis1 = cecs_get_column(it_from_it0, COMPONENT_MESH_INSTANCE);
                 const Collider* colliders1 = cecs_get_column(it_from_it0, COMPONENT_COLLIDER);
                 PhysicsData* physics_datas1 = cecs_get_column(it_from_it0, COMPONENT_PHYSICS_DATA);
@@ -214,6 +217,8 @@ static void broad_phase(Physics* physics, Scene* scene)
                 // Start past current entity
                 for (uint32_t j = i + 1; j < it_from_it0.num_entities; ++j)
                 {
+                    CECS_EntityId eid1 = ids1[j];
+
                     const MeshInstance* mi1 = &mis1[j];
 
                     // TODO: Cannot collide with self for now, leave this as reminder
@@ -237,6 +242,8 @@ static void broad_phase(Physics* physics, Scene* scene)
                     if (dist <= n)
                     {
                         PotentialCollision pc = {
+                            .eid0 = eid,
+                            .eid1 = eid1,
                             .c0 = collider,
                             .mi0 = mi,
                             .pd0 = physics_data,
@@ -258,6 +265,7 @@ static void broad_phase(Physics* physics, Scene* scene)
 
             while (cecs_view_iter_next(&sc_it))
             {
+                const CECS_EntityId* ids1 = cecs_get_entity_ids(sc_it);
                 const MeshInstance* mis1 = cecs_get_column(sc_it, COMPONENT_MESH_INSTANCE);
                 const Collider* colliders1 = cecs_get_column(sc_it, COMPONENT_COLLIDER);
                 const Transform* transforms1 = cecs_get_column(sc_it, COMPONENT_TRANSFORM);
@@ -265,6 +273,7 @@ static void broad_phase(Physics* physics, Scene* scene)
                 // Start past current entity
                 for (uint32_t j = 0; j < sc_it.num_entities; ++j)
                 {
+                    CECS_EntityId eid1 = ids1[j];
                     MeshInstance* mi1 = &mis1[j];
                     const Collider* collider1 = &colliders1[j];
                     Transform* transform1 = &transforms1[j];
@@ -279,6 +288,8 @@ static void broad_phase(Physics* physics, Scene* scene)
                     if (dist <= n)
                     {
                         PotentialCollision pc = {
+                            .eid0 = eid,
+                            .eid1 = eid1,
                             .c0 = collider,
                             .mi0 = mi,
                             .pd0 = physics_data,
@@ -310,7 +321,8 @@ static void resolve_single_collision(V3 collision_normal, float penetration_dept
     V3 rel_vel = v3_sub_v3(a_vel, b_vel);
     
     // Resolve a collision between objects A and B.
-    const float slop = 0; // TODO: Do we want slop? This is actually stopping us from separating fully right????
+    //const float slop = 0; // TODO: Do we want slop? This is actually stopping us from separating fully right????
+    const float slop = 0.001f; // TODO: Do we want slop? This is actually stopping us from separating fully right????
     const float vel_along_n = dot(rel_vel, collision_normal);
 
     // Avoid jitter by moving slightly away from collision point.
@@ -335,7 +347,10 @@ static void resolve_single_collision(V3 collision_normal, float penetration_dept
     // Ignore if separating as the current velocity wouldn't cause them 
     // to re-collide, therefore, no normal force and friction.
     // TODO: I don't think we will actually ever have this situatio???
-    if (vel_along_n > 0.f) return;
+    //if (vel_along_n > 0.f) return;
+
+    const float vel_slop = 0.001f;
+    if (vel_along_n > -vel_slop) return;
 
     float j = -(1.f + e) * vel_along_n;
     j /= total_inv_mass;
@@ -568,7 +583,9 @@ static void narrow_ellipsoid_vs_mi(Physics* physics, Scene* scene, PotentialColl
         // Backface culling, velocity and normal should face towards each other!
         // dot(A,B) = |A||B|cos(theta), note, we only care about sign.
         // If angle is < 90, they not facing each other so use: cos(>90) < 0
-        if (dot(vel, tri_plane.normal) >= 0) continue;
+        // TODO: this is potetnailly breaking resting contacts where the vel
+        // is like 0.
+        //if (dot(vel, tri_plane.normal) >= 0) continue;
 
         float D = signed_distance(&tri_plane, e_start_pos);
         float dist = fabsf(D);
@@ -624,7 +641,6 @@ static void narrow_ellipsoid_vs_mi(Physics* physics, Scene* scene, PotentialColl
 
             CollisionData cd = { 0 };
             cd.collision_normal = w_collision_normal;
-            cd.hit = 1;
             cd.penetration_depth = depth_world;
             cd.pc = pc;
             
@@ -666,7 +682,6 @@ static void narrow_sphere_vs_sphere(Physics* physics, Scene* scene, PotentialCol
     CollisionData cd = { 0 };
     cd.penetration_depth = penetration_depth;
     cd.collision_normal = n;
-    cd.hit = 1;
     cd.pc = pc;
 
     chds_vec_push(physics->frame.collisions, cd);
@@ -751,6 +766,53 @@ static void resolve_collisions(Physics* physics, Scene* scene)
     }
 }
 
+void reset_contacts(Physics* physics)
+{
+    chds_vec_clear(physics->frame.previous_contacts);
+    SWAP(CHDS_Vec(CollisionPair), physics->frame.current_contacts, physics->frame.previous_contacts);
+}
+
+static void update_contacts(Physics* physics, Scene* scene)
+{
+    // TODO: a set would be ideal for this sort of thing.
+    for (int i = 0; i < chds_vec_size(physics->frame.collisions); ++i)
+    {
+        CollisionData data = physics->frame.collisions[i];
+     
+        // TODO: eventually we could support multiple colliders, then this would
+        //       be a collider pair rather than an entity pair.
+        CECS_EntityId eid0 = data.pc.eid0;
+        CECS_EntityId eid1 = data.pc.eid1;
+
+        // Enforce increasing id order, enables easier comparison.
+        if (eid0 > eid1) { SWAP(CECS_EntityId, eid0, eid1); }
+
+        // TODO: eventually we could collect the multiple contacts per pair.
+        CollisionPair pair = {
+            .e0 = eid0,
+            .e1 = eid1
+        };
+
+        uint8_t duplicate = 0;
+        for (int i = 0; i < chds_vec_size(physics->frame.current_contacts); ++i)
+        {
+            CollisionPair existing = physics->frame.current_contacts[i];
+            if (pair.e0 == existing.e0 && pair.e1 == existing.e1)
+            {
+                duplicate = 1;
+                break;
+            }
+        }
+
+        if (duplicate)
+        {
+            continue;
+        }
+
+        chds_vec_push(physics->frame.current_contacts, pair);
+    }
+}
+
 uint8_t handle_collisions(Physics* physics, Scene* scene)
 {
     /*
@@ -772,9 +834,124 @@ uint8_t handle_collisions(Physics* physics, Scene* scene)
 
     resolve_collisions(physics, scene);
 
+    update_contacts(physics, scene);
+
     // Return 0 to show there were no collisions, allows us to early out
     // of iterative solver.
     return (uint8_t)((int)chds_vec_size(physics->frame.collisions) > 0.f);
+}
+
+void dispatch_contacts(Physics* physics, Scene* scene, float dt)
+{
+    for (int i = 0; i < chds_vec_size(physics->frame.current_contacts); ++i)
+    {
+        CollisionPair pair = physics->frame.current_contacts[i];
+
+        uint8_t found = 0;
+        for (int j = 0; j < chds_vec_size(physics->frame.previous_contacts); ++j)
+        {
+            CollisionPair other_pair = physics->frame.previous_contacts[j];
+
+            if (pair.e0 == other_pair.e0 && pair.e1 == other_pair.e1)
+            {
+                found = 1;
+                break;
+            }
+        }
+
+        // TODO: nicer way than this??
+        CollisionEvent event0 = {
+            .ecs = physics->ecs,
+            .self = pair.e0,
+            .other = pair.e1,
+            .dt = dt
+        };
+
+        CollisionEvent event1 = {
+            .ecs = physics->ecs,
+            .self = pair.e1,
+            .other = pair.e0,
+            .dt = dt
+        };
+
+        if (found)
+        {
+            // TODO: could make a dispatch helper function.
+            Collider* c0 = cecs_get_component(physics->ecs, pair.e0, COMPONENT_COLLIDER);
+            if (c0 && c0->on_collision_stay)
+            {
+                c0->on_collision_stay(&event0);
+            }
+
+            Collider* c1 = cecs_get_component(physics->ecs, pair.e1, COMPONENT_COLLIDER);
+            if (c1 && c1->on_collision_stay)
+            {
+                c1->on_collision_stay(&event1);
+            }
+        }
+        else
+        {
+            Collider* c0 = cecs_get_component(physics->ecs, pair.e0, COMPONENT_COLLIDER);
+            if (c0 && c0->on_collision_enter)
+            {
+                c0->on_collision_enter(&event0);
+            }
+
+            Collider* c1 = cecs_get_component(physics->ecs, pair.e1, COMPONENT_COLLIDER);
+            if (c1 && c1->on_collision_enter)
+            {
+                c1->on_collision_enter(&event1);
+            }
+        }
+    }
+
+    for (int i = 0; i < chds_vec_size(physics->frame.previous_contacts); ++i)
+    {
+        CollisionPair pair = physics->frame.previous_contacts[i];
+
+
+        uint8_t found = 0;
+        for (int j = 0; j < chds_vec_size(physics->frame.current_contacts); ++j)
+        {
+            CollisionPair other_pair = physics->frame.current_contacts[j];
+
+            if (pair.e0 == other_pair.e0 && pair.e1 == other_pair.e1)
+            {
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            CollisionEvent event0 = {
+                .ecs = physics->ecs,
+                .self = pair.e0,
+                .other = pair.e1,
+                .dt = dt
+            };
+
+            CollisionEvent event1 = {
+                .ecs = physics->ecs,
+                .self = pair.e1,
+                .other = pair.e0,
+                .dt = dt
+            };
+
+            Collider* c0 = cecs_get_component(physics->ecs, pair.e0, COMPONENT_COLLIDER);
+            if (c0 && c0->on_collision_exit)
+            {
+                c0->on_collision_exit(&event0);
+            }
+
+            Collider* c1 = cecs_get_component(physics->ecs, pair.e1, COMPONENT_COLLIDER);
+
+            if (c1 && c1->on_collision_exit)
+            {
+                c1->on_collision_exit(&event1);
+            }
+        }
+    }
 }
 
 void collider_init(Collider* c)

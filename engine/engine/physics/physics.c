@@ -207,13 +207,16 @@ void physics_tick(Physics* physics, Scene* scene, float dt)
 
     apply_velocities(physics, dt);
 
+    reset_contacts(physics);
+
     for (uint8_t i = 0; i < physics->max_collision_iters; ++i)
     {
         if (!handle_collisions(physics, scene))
         {
             break;
         }
-
     }
+
+    dispatch_contacts(physics, scene, dt);
 }
 

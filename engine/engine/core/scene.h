@@ -9,7 +9,7 @@
 #include "common/status.h"
 
 // TODO: This should more be storing metadata of the scene, the ecs contains lights and instances etc.
-typedef struct scene
+typedef struct Scene
 {
 	MeshBases mesh_bases; // TODO: Should these simply be global? 
                           // TODO: Make chds_vec
