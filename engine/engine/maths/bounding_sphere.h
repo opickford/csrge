@@ -3,7 +3,7 @@
 
 #include "vector3.h"
 
-typedef struct bounding_sphere
+typedef struct BoundingSphere
 {
     V3 centre;
     float radius;

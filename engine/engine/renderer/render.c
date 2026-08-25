@@ -333,6 +333,7 @@ void draw_scanline(RenderTarget* rt,
 
 	for (unsigned int i = 0; i < dx; ++i)
 	{
+        // TODO: still getting a crash somewhere here.
 		// Depth test, only draw closer values.
 		if (*depth_buffer > z)
 		{

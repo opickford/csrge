@@ -318,6 +318,20 @@ void engine_on_keyup(Engine* engine, WPARAM wParam)
     }
 }
 
+void test_on_enter(const CollisionEvent* e)
+{
+    
+}
+
+void test_on_exit(const CollisionEvent* e)
+{
+    
+}
+
+void test_on_stay(const CollisionEvent* e)
+{
+}
+
 void engine_on_lmbdown(Engine* engine)
 {
     Scene* scene = &engine->scene;
@@ -364,6 +378,9 @@ void engine_on_lmbdown(Engine* engine)
     Collider* collider = cecs_add_component(engine->ecs, cube_entity, COMPONENT_COLLIDER);
     collider_init(collider);
     collider->shape.ellipsoid = transform->scale;
+    collider->on_collision_enter = test_on_enter;
+    collider->on_collision_stay = test_on_stay;
+    collider->on_collision_exit = test_on_exit;
 }
 
 int main()

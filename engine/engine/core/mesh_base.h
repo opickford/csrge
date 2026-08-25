@@ -29,7 +29,7 @@ always remain valid as an index without extra indirection logic.
 
 typedef int MeshBaseId;
 
-typedef struct mesh_base
+typedef struct MeshBase
 {
 	MeshBaseId id; // The index of the mesh base in it's MeshBases container.
 
